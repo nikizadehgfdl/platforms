@@ -1,0 +1,16 @@
+#override RESOLN_SCALED_KHTR = True
+#override KH_RES_FN_POWER = 100
+#override VISC_RES_FN_POWER = 100
+#override MIN_THICKNESS = 1.e-6
+SAVE_INITIAL_CONDS = True
+#DEBUG = True
+#DEBUG_BT = True
+#VERBOSITY = 9
+#override USE_OCMIP2_CFC = False
+#override USE_IDEAL_AGE_TRACER = False
+#override USE_generic_tracer = True
+GENERIC_TRACER_IC_FILE = "INPUT/generics.res.nc"
+#Do cfcs instead of dye
+#override OBC_SEGMENT_001_DATA = "U=file:obcs.nc(u),V=file:obcs.nc(v),SSH=file:obcs.nc(zeta),TEMP=file:obcs.nc(temp),SALT=file:obcs.nc(salt),gtr1=file:obcs.nc(salt)"
+#override OBC_SEGMENT_002_DATA = "U=file:obcs.nc(u),V=file:obcs.nc(v),SSH=file:obcs.nc(zeta),TEMP=file:obcs.nc(temp),SALT=file:obcs.nc(salt),gtr1=file:obcs.nc(salt)"
+#override OBC_SEGMENT_003_DATA = "U=file:obcs.nc(u),V=file:obcs.nc(v),SSH=file:obcs.nc(zeta),TEMP=file:obcs.nc(temp),SALT=file:obcs.nc(salt),gtr1=file:obcs.nc(salt)"
