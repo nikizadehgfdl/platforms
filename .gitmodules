@@ -25,3 +25,6 @@
 [submodule "mom6/src/icebergs"]
 	path = mom6/src/icebergs
 	url = https://github.com/NOAA-GFDL/icebergs.git
+[submodule "mom6/src/ocean_BGC"]
+	path = mom6/src/ocean_BGC
+	url = https://github.com/nikizadehgfdl/ocean_BGC.git
