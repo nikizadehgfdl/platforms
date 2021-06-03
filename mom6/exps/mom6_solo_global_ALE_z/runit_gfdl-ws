@@ -1,2 +1,2 @@
-source ../../builds/gfdl-ws/intel15.env
-mpirun -n 8 ../../builds/build/gfdl-ws-intel15/ocean_only/prod/MOM6
+source ../../builds/gfdl-ws/intel18.env
+mpirun -n 8 ../../builds/build/gfdl-ws-intel18/ocean_only/prod/MOM6
