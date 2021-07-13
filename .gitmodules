@@ -27,4 +27,8 @@
 	url = https://github.com/NOAA-GFDL/icebergs.git
 [submodule "mom6/src/ocean_BGC"]
 	path = mom6/src/ocean_BGC
+<<<<<<< HEAD
 	url = https://github.com/NOAA-GFDL/ocean_BGC.git
+=======
+	url = https://github.com/nikizadehgfdl/ocean_BGC.git
+>>>>>>> origin/alcf_workshop_2021

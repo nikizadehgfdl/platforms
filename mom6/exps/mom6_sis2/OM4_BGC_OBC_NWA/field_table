@@ -1,0 +1,62 @@
+# specific humidity for moist runs
+ "TRACER", "atmos_mod", "sphum"
+           "longname",     "specific humidity"
+           "units",        "kg/kg" /
+##     "profile_type", "fixed", "surface_value=3.e-6" /
+# prognostic cloud scheme tracers
+  "TRACER", "atmos_mod", "liq_wat"
+            "longname",     "cloud liquid specific humidity"
+            "units",        "kg/kg" /
+  "TRACER", "atmos_mod", "ice_wat"
+            "longname",     "cloud ice water specific humidity"
+            "units",        "kg/kg" /
+  "TRACER", "atmos_mod", "cld_amt"
+            "longname",     "cloud fraction"
+            "units",        "none" /
+# sphum must be present on land as well
+ "TRACER", "land_mod",     "sphum"
+           "longname",     "specific humidity"
+           "units",        "kg/kg" /
+###.................................................
+"namelists","ocean_mod","generic_COBALT"
+enforce_src_info = f
+alk_obc_src_file_name = bgc_glodap.nc
+cadet_arag_obc_src_file_name = bgc_cobalt.nc
+cadet_calc_obc_src_file_name = bgc_cobalt.nc
+dic_obc_src_file_name = bgc_glodap.nc
+dic14_obc_src_file_name = bgc_zero.nc
+do14_obc_src_file_name = bgc_zero.nc
+do14c_obc_src_file_name = bgc_zero.nc
+di14c_obc_src_file_name = bgc_zero.nc
+fed_obc_src_file_name = bgc_cobalt.nc
+fedi_obc_src_file_name = bgc_cobalt.nc
+felg_obc_src_file_name = bgc_cobalt.nc
+fedet_obc_src_file_name = bgc_cobalt.nc
+fesm_obc_src_file_name = bgc_cobalt.nc
+ldon_obc_src_file_name = bgc_cobalt.nc
+ldop_obc_src_file_name = bgc_cobalt.nc
+lith_obc_src_file_name = bgc_cobalt.nc
+lithdet_obc_src_file_name = bgc_cobalt.nc
+nbact_obc_src_file_name = bgc_cobalt.nc
+ndet_obc_src_file_name = bgc_cobalt.nc
+ndi_obc_src_file_name = bgc_cobalt.nc
+nlg_obc_src_file_name = bgc_cobalt.nc
+nsm_obc_src_file_name = bgc_cobalt.nc
+nh3_obc_src_file_name = bgc_zero.nc
+nh4_obc_src_file_name = bgc_cobalt.nc
+no3_obc_src_file_name = bgc_woa.nc
+o2_obc_src_file_name = bgc_woa.nc
+pdet_obc_src_file_name = bgc_cobalt.nc
+po4_obc_src_file_name = bgc_woa.nc
+srdon_obc_src_file_name = bgc_cobalt.nc
+srdop_obc_src_file_name = bgc_cobalt.nc
+sldon_obc_src_file_name = bgc_cobalt.nc
+sldop_obc_src_file_name = bgc_cobalt.nc
+sidet_obc_src_file_name = bgc_cobalt.nc
+silg_obc_src_file_name = bgc_cobalt.nc
+sio4_obc_src_file_name = bgc_woa.nc
+nsmz_obc_src_file_name = bgc_cobalt.nc
+nmdz_obc_src_file_name = bgc_cobalt.nc
+nlgz_obc_src_file_name = bgc_cobalt.nc
+/
+
