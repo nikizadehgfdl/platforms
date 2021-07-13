@@ -85,6 +85,34 @@ does not make a difference here (I guess since there are no module variables) an
 -qopt-zmm-usage=high 
 -align array64byte	10.175		312338.5250000E+01
 
+==========================================================
+gfdl-ws
+compiler flags          time(secs)      sum
+==========================================================
+Intel oneapi
+-no-vec                 69.164  sum=  312338.9000000E+01
+None                    27.678  sum=  312338.5000000E+01
+-O3                     27.383  sum=  312338.5000000E+01
+-xCORE-AVX512 Errors out 
+
+OKAMI
+compiler flags          time(secs)      sum
+==========================================================
+Cray Compiler /opt/cray/pe/craype/2.7.0/bin/ftn vector1_matvec.f90 vector1_driver.f90 -o vector1_matvec0
+None                      19.769      312338.5250000E+01
+-O3 -O fp2 -G2 -h vector3 21.613      312338.5250000E+01
+
+Fujitsu Compiler frt vector1_matvec.f90 vector1_driver.f90 -o vector1_matvec_fujitsu
+None                      24.444      312338.2500000E+01
+-KSVE                     24.378      312338.2500000E+01
+-O3 -Kfast                21.127      312338.5000000E+01
+
+ARM Compiler armflang -O3 vector1_matvec.f90 vector1_driver.f90 -o vector1_matvec_arm_O3
+None                      63.683      312339.6500000E+01
+
+GNU Compiler gfortran vector1_matvec.f90 vector1_driver.f90 -o vector1_matvec_GNU
+None                      502.701     312339.6500000E+01
+-mcpu=A64FX               502.532     312339.6500000E+01
 
 
 
