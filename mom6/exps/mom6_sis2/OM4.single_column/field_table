@@ -23,3 +23,5 @@
 #           "longname",     "radon test tracer"
 #           "units",        "kg/kg" /      
 ###.................................................
+"namelists","ocean_mod","generic_CFC"
+/
