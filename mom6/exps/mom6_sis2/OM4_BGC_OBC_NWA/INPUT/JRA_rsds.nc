@@ -1,0 +1,1 @@
+../../datasets/grids/OM4_OBC_NWA/JRA_rsds.nc
