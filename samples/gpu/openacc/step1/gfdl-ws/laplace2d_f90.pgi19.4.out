@@ -104,3 +104,51 @@ Jacobi relaxation Calculation: 4096 x 4096 mesh
 ./laplace2d_f90_noOPT
 Jacobi relaxation Calculation: 4096 x 4096 mesh
  completed in    247.357 seconds, in 2421 iteration, sum(A)=76576.304687500000000
+
+
+pgf90 -O2 -mp -Minfo -o laplace2d_f90_omptarget laplace2d_omptarget.f90
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 33)
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 33)
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 33)
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 33)
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 39)
+PGF90-W-0547-OpenMP feature, MAP, not yet implemented in this version of the compiler. (laplace2d_omptarget.f90: 39)
+  0 inform,   6 warnings,   0 severes, 0 fatal for main
+main:
+     14, Memory zero idiom, array assignment replaced by call to pgf90_mzero4
+     16, Memory copy idiom, loop replaced by call to __c_mcopy4
+         Generated vector simd code for the loop
+     17, Loop not vectorized: non-stride-1 array reference
+         Loop unrolled 2 times
+     18, Loop not vectorized: non-stride-1 array reference
+         Loop unrolled 2 times
+     19, Memory copy idiom, loop replaced by call to __c_mcopy4
+     20, Generated vector simd code for the loop
+     23, Loop not vectorized: non-stride-1 array reference
+         Loop unrolled 4 times
+     28, Generated vector simd code for the loop
+     37, Loop not vectorized/parallelized: potential early exits
+     39, Target region activated
+         Teams region activated
+     40, Parallel region activated
+         Parallel loop activated with static block schedule
+     41, Generated vector simd code for the loop containing reductions
+         Residual loop unrolled 2 times
+     46, Parallel region terminated
+         Loop not vectorized/parallelized: contains a parallel region
+     47, Teams region terminated
+         Target region terminated
+         Loop not vectorized/parallelized: contains a parallel region
+     49, Target region activated
+         Teams region activated
+     50, Parallel region activated
+     54, Parallel region terminated
+     55, Teams region terminated
+         Target region terminated
+     63, sum reduction inlined
+         Generated vector simd code for the loop containing reductions
+
+./laplace2d_f90_omptarget
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ completed in     24.221 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+

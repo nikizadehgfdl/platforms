@@ -23,7 +23,7 @@ FPPFLAGS := -fpp -Wp,-w
 
 FFLAGS += $(shell pkg-config --cflags-only-I netcdf)
 FFLAGS += $(shell pkg-config --cflags-only-I mpich)
-FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g -sox -traceback
+FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -sox -traceback
 FFLAGS_OPT = -O2
 FFLAGS_REPRO = -fltconsistency
 FFLAGS_DEBUG = -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -ftrapuv
