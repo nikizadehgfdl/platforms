@@ -1,0 +1,72 @@
+Fri Sep 17 15:53:43 2021       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100-PCIE...  Off  | 00000000:04:00.0 Off |                    0 |
+| N/A   60C    P0    44W / 250W |      0MiB / 32510MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  Tesla V100-PCIE...  Off  | 00000000:83:00.0 Off |                    0 |
+| N/A   51C    P0    42W / 250W |      0MiB / 32510MiB |      2%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+
+pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -o arrays_acc_managed arrays.f90
+main:
+     25, Generating copyout(t_a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t_b(:,:,:)) [if not already present]
+     26, Generating Tesla code
+         27,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+pgf90 -O2 -acc -ta=nvidia -Minfo=accel -o arrays_acc arrays.f90
+main:
+     25, Generating copyout(t_a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t_b(:,:,:)) [if not already present]
+     26, Generating Tesla code
+         27,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+pgf90 -O2 -o arrays arrays.f90
+pgf90 -r8 -o arraysr8 arrays.f90
+pgf90 -O2 -acc -ta=nvidia -Minfo=accel -r8 -o arraysr8_acc arrays.f90
+main:
+     25, Generating copyout(t_a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t_b(:,:,:)) [if not already present]
+     26, Generating Tesla code
+         27,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -r8 -o arraysr8_acc_managed arrays.f90
+main:
+     25, Generating copyout(t_a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t_b(:,:,:)) [if not already present]
+     26, Generating Tesla code
+         27,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+./arrays
+Problem size   1000000000 completed in      4.561 seconds,  sums=    1.000990033149719    0.500495016574860
+./arrays_acc
+Problem size   1000000000 completed in      5.172 seconds,  sums=    1.000990033149719    0.500495016574860
+./arrays_acc_managed
+Problem size   1000000000 completed in      6.425 seconds,  sums=    1.000990033149719    0.500495016574860
+./arraysr8
+Problem size   1000000000 completed in     19.799 seconds,  sums=    0.999999992539933    0.499999996269966
+./arraysr8_acc
+Problem size   1000000000 completed in     32.196 seconds,  sums=    0.999999999998084    0.499999999999042
+./arraysr8_acc_managed
+Problem size   1000000000 completed in     17.585 seconds,  sums=    0.999999999998084    0.499999999999042
+

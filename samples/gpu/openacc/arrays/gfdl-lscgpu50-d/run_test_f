@@ -1,0 +1,15 @@
+source ./envs
+make -f ../Makefile_f90
+echo ./arrays
+./arrays
+echo ./arrays_acc
+./arrays_acc
+echo ./arrays_acc_managed
+./arrays_acc_managed
+echo ./arraysr8
+./arraysr8
+echo ./arraysr8_acc
+./arraysr8_acc
+echo ./arraysr8_acc_managed
+./arraysr8_acc_managed
+

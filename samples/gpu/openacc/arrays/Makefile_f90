@@ -1,0 +1,30 @@
+F90       = pgf90
+ACCFLAGS = -acc -ta=nvidia:managed -Minfo=accel
+ACCFLAGSU = -acc -ta=nvidia -Minfo=accel
+OMPFLAGS = -mp -Minfo
+FASTFLAGS = -O2
+
+BIN =  arrays_acc_managed arrays_acc arrays arraysr8 arraysr8_acc arraysr8_acc_managed
+
+all: $(BIN)
+
+arrays_acc_managed: arrays.f90
+	$(F90) $(FASTFLAGS) $(ACCFLAGS) -o $@ $<
+
+arrays_acc: arrays.f90
+	$(F90) $(FASTFLAGS) $(ACCFLAGSU) -o $@ $<
+
+arrays: arrays.f90
+	$(F90) $(FASTFLAGS) -o $@ $<
+
+arraysr8: arrays.f90
+	$(F90) -r8 -o $@ $<
+
+arraysr8_acc_managed: arrays.f90
+	$(F90) $(FASTFLAGS) $(ACCFLAGS) -r8 -o $@ $<
+
+arraysr8_acc: arrays.f90
+	$(F90) $(FASTFLAGS) $(ACCFLAGSU) -r8 -o $@ $<
+
+clean:
+	$(RM) $(BIN)
