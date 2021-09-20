@@ -25,48 +25,98 @@ Fri Sep 17 15:53:43 2021
 
 pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -o arrays_acc_managed arrays.f90
 main:
-     25, Generating copyout(t_a(:,:,:)) [if not already present]
+     31, Generating copyout(t_a(:,:,:)) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
          Generating copyout(t_b(:,:,:)) [if not already present]
-     26, Generating Tesla code
-         27,   ! blockidx%x threadidx%x collapsed
+     32, Generating Tesla code
+         33,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     47, Generating copyout(t%a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t%b(:,:,:)) [if not already present]
+     48, Generating Tesla code
+         49,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     48, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -acc -ta=nvidia -Minfo=accel -o arrays_acc arrays.f90
 main:
-     25, Generating copyout(t_a(:,:,:)) [if not already present]
+     31, Generating copyout(t_a(:,:,:)) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
          Generating copyout(t_b(:,:,:)) [if not already present]
-     26, Generating Tesla code
-         27,   ! blockidx%x threadidx%x collapsed
+     32, Generating Tesla code
+         33,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     47, Generating copyout(t%a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t%b(:,:,:)) [if not already present]
+     48, Generating Tesla code
+         49,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     48, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -o arrays arrays.f90
 pgf90 -r8 -o arraysr8 arrays.f90
 pgf90 -O2 -acc -ta=nvidia -Minfo=accel -r8 -o arraysr8_acc arrays.f90
 main:
-     25, Generating copyout(t_a(:,:,:)) [if not already present]
+     31, Generating copyout(t_a(:,:,:)) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
          Generating copyout(t_b(:,:,:)) [if not already present]
-     26, Generating Tesla code
-         27,   ! blockidx%x threadidx%x collapsed
+     32, Generating Tesla code
+         33,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     47, Generating copyout(t%a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t%b(:,:,:)) [if not already present]
+     48, Generating Tesla code
+         49,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     48, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -r8 -o arraysr8_acc_managed arrays.f90
 main:
-     25, Generating copyout(t_a(:,:,:)) [if not already present]
+     31, Generating copyout(t_a(:,:,:)) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
          Generating copyout(t_b(:,:,:)) [if not already present]
-     26, Generating Tesla code
-         27,   ! blockidx%x threadidx%x collapsed
+     32, Generating Tesla code
+         33,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     47, Generating copyout(t%a(:,:,:)) [if not already present]
+         Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copyout(t%b(:,:,:)) [if not already present]
+     48, Generating Tesla code
+         49,   ! blockidx%x threadidx%x collapsed
+             !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
+     48, Generating implicit copyin(t) [if not already present]
 ./arrays
-Problem size   1000000000 completed in      4.561 seconds,  sums=    1.000990033149719    0.500495016574860
+Array
+Array      size   1000000000 completed in      1.447 seconds,  sum=    1.000990033149719
+type%Array
+type%Array size   1000000000 completed in      2.046 seconds,  sum=    0.031250000000000
 ./arrays_acc
-Problem size   1000000000 completed in      5.172 seconds,  sums=    1.000990033149719    0.500495016574860
+Array
+Array      size   1000000000 completed in      3.497 seconds,  sum=    1.000990033149719
+type%Array
+Failing in Thread:1
+call to cuStreamSynchronize returned error 700: Illegal address during kernel execution
+
 ./arrays_acc_managed
-Problem size   1000000000 completed in      6.425 seconds,  sums=    1.000990033149719    0.500495016574860
+Array
+Array      size   1000000000 completed in      2.310 seconds,  sum=    1.000990033149719
+type%Array
+type%Array size   1000000000 completed in      1.557 seconds,  sum=    0.031250000000000
 ./arraysr8
-Problem size   1000000000 completed in     19.799 seconds,  sums=    0.999999992539933    0.499999996269966
+Array
+Array      size   1000000000 completed in      4.734 seconds,  sum=    0.999999992539933
+type%Array
+type%Array size   1000000000 completed in      3.972 seconds,  sum=    0.999999992539933
 ./arraysr8_acc
-Problem size   1000000000 completed in     32.196 seconds,  sums=    0.999999999998084    0.499999999999042
+Array
+Array      size   1000000000 completed in     13.488 seconds,  sum=    0.999999999998084
+type%Array
+Failing in Thread:1
+call to cuStreamSynchronize returned error 700: Illegal address during kernel execution
+
 ./arraysr8_acc_managed
-Problem size   1000000000 completed in     17.585 seconds,  sums=    0.999999999998084    0.499999999999042
+Array
+Array      size   1000000000 completed in      3.956 seconds,  sum=    0.999999999998084
+type%Array
+type%Array size   1000000000 completed in      2.396 seconds,  sum=    0.999999992539933
 
