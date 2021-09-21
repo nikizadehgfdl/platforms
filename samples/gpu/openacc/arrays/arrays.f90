@@ -9,8 +9,8 @@
 !  calculate the excatly known sum of the elements of the output array
 !
 !In the following the exact values of "sums" should be 1.0 (upto machine precision.) 
-!GPU_M stands for the managed memory mode of ACC compilation -ta=nvidia:managed
 !Array size=   1000000000
+!GPU_M stands for the managed memory mode of ACC compilation -ta=nvidia:managed
 !
 !!!Single precision results:
 !CPU   Array      time= 2.414 seconds,  sums=  1.000990033149719    0.000000000000000
@@ -29,30 +29,34 @@
 !GPU   type%Array uStreamSynchronize error 700: Illegal address during kernel execution
 !
 !NOTES:
-!- Single precision may be much faster, but it does not give correct answers, and gives totally wrong answers if Math function calls are involved
-!- Single precision does not reproduce sum(A) if array A is a member element of a type!
-!- Even double precision is not as accurate as it should be (14 digits).
-!- GPU with non-managed memory is slow
+!- Single precision may be much faster, but it does not give accurate answers,
+!- Single precision gives totally wrong answers if Math function calls are involved (0.0 for the second sum)!
+!- Single precision gives totally wrong answers for sum(A) if array A is a member element of a type!
+!- Double precision is not as accurate as it should be (only 7-8 decimals rather than 14 decimals).
+!- GPU with non-managed memory is very slow
 !- GPU with non-managed memory cannot handle offloading of types
 !- GPU double precision seems to be more accurate (closer to 1.) for array than type%array
 !- On a positive note, GPU with managed memory is doing a fine job, both in acccuracy and speeding up the model.
 !
 !
 !
-!  Note on precision: Just as a test
+!Naively, here's why I expect to see 14 digits accuracy with -r8
 !  real :: x
 !  x=0.123456789123456789
 !  write(*,'(a,f28.25)') 'x = ',x
 !  write(*,'(a,f28.25)') 'fx= ',2.0*log(exp(x*0.5))
 !  Gives:
-!Single precision
-!x =  0.1234567910432815551757813
-!fx=  0.1234567314386367797851563
-!Warning: ieee_inexact is signaling
-!Double precision (-r8)
-!x =  0.1234567891234567837965841
-!fx=  0.1234567891234567837965841
-!Warning: ieee_inexact is signaling
+!Single precision output:
+!!!x =  0.1234567910432815551757813
+!!!fx=  0.1234567314386367797851563
+!!!Warning: ieee_inexact is signaling
+!Double precision (-r8) output:
+!!!x =  0.1234567891234567837965841
+!!!fx=  0.1234567891234567837965841
+!!!Warning: ieee_inexact is signaling
+!
+!So double precision agrees to 17 decimal places whereas single precision to just 7
+!Why don't I see this for the sums above?
 
 
 program main
