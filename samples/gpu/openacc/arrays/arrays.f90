@@ -13,19 +13,19 @@
 !GPU_M stands for the managed memory mode of ACC compilation -ta=nvidia:managed
 !
 !!!Single precision results:
-!CPU   Array      time= 2.414 seconds,  sums=  1.000990033149719    0.000000000000000
-!CPU   type%Array time=23.48  seconds,  sums=  0.031250000000000    0.000000000000000
-!GPU_M Array      time= 1.713 seconds,  sums=  1.000990033149719    0.000000000000000
-!GPU_M type%Array time= 1.236 seconds,  sums=  0.031250000000000    0.000000000000000
-!GPU   Array      time= 5.445 seconds,  sums=  1.000990033149719    0.000000000000000
+!CPU   Array,       time(secs)=  2.494 sums=  1.000990033149719  0.000000000000000
+!CPU   type%Array,  time(secs)= 22.967 sums=  0.031250000000000  0.000000000000000
+!GPU_M Array,       time(secs)=  2.782 sums=  1.000990033149719  0.000000000000000
+!GPU_M type%Array,  time(secs)=  1.348 sums=  0.031250000000000  0.000000000000000
+!GPU   Array,       time(secs)=  4.456 sums=  1.000990033149719  0.000000000000000
 !GPU   type%Array uStreamSynchronize error 700: Illegal address during kernel execution
 !
 !!!Double precision results (-r8):
-!CPU   Array      time=34.177 seconds, sums=  0.999999992539933    1.000000082739080
-!CPU   type%Array time=34.442 seconds, sums=  0.999999992539933    1.000000082739080
-!GPU_M Array      time= 3.776 seconds, sums=  0.999999999998084    1.000000082487792
-!GPU_M type%Array time= 2.776 seconds, sums=  0.999999992539933    1.000000082739080
-!GPU   Array      time=15.057 seconds, sums=  0.999999999998084    1.000000082487792
+!CPU   Array,       time(secs)= 36.612 sums=  0.999999992539933  1.000000082739080
+!CPU   type%Array,  time(secs)= 36.460 sums=  0.999999992539933  1.000000082739080
+!GPU_M Array,       time(secs)=  3.840 sums=  0.999999999998084  1.000000082487792
+!GPU_M type%Array,  time(secs)=  2.474 sums=  0.999999992539933  1.000000082739080
+!GPU   Array,       time(secs)= 19.137 sums=  0.999999999998084  1.000000082487792
 !GPU   type%Array uStreamSynchronize error 700: Illegal address during kernel execution
 !
 !NOTES:
@@ -92,7 +92,7 @@ program main
   t_a = 0.0
   t_b = 0.0
   call cpu_time(start_time) 
-  !$ACC data copyin(dd,t_a,t_b) copyout(t_a,t_b)
+  !$ACC data copyin(dd) copy(t_a,t_b)
   !$ACC parallel loop collapse(3)
   do k = 1,nk ; do j = jsc,jec ; do i = isc,iec
      t_a(i,j,k) = dd(i,j,k)
@@ -109,7 +109,7 @@ program main
   t%a = 0.0
   t%b = 0.0
   call cpu_time(start_time) 
-  !$ACC data copyin(dd,t%a,t%b) copyout(t%a,t%b)
+  !$ACC data copyin(dd) copy(t)
   !$ACC parallel loop collapse(3)
   do k = 1,nk ; do j = jsc,jec ; do i = isc,iec
      t%a(i,j,k) = dd(i,j,k)

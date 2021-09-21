@@ -25,92 +25,81 @@ Fri Sep 17 15:53:43 2021
 
 pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -o arrays_acc_managed arrays.f90
 main:
-     72, Generating copyout(t_a(:,:,:)) [if not already present]
-         Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t_b(:,:,:)) [if not already present]
-     73, Generating Tesla code
-         74,   ! blockidx%x threadidx%x collapsed
+     95, Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copy(t_b(:,:,:),t_a(:,:,:)) [if not already present]
+     96, Generating Tesla code
+         97,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     89, Generating copyout(t%a(:,:,:)) [if not already present]
+    112, Generating copy(t) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t%b(:,:,:)) [if not already present]
-     90, Generating Tesla code
-         91,   ! blockidx%x threadidx%x collapsed
+    113, Generating Tesla code
+        114,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     90, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -acc -ta=nvidia -Minfo=accel -o arrays_acc arrays.f90
 main:
-     72, Generating copyout(t_a(:,:,:)) [if not already present]
-         Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t_b(:,:,:)) [if not already present]
-     73, Generating Tesla code
-         74,   ! blockidx%x threadidx%x collapsed
+     95, Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copy(t_b(:,:,:),t_a(:,:,:)) [if not already present]
+     96, Generating Tesla code
+         97,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     89, Generating copyout(t%a(:,:,:)) [if not already present]
+    112, Generating copy(t) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t%b(:,:,:)) [if not already present]
-     90, Generating Tesla code
-         91,   ! blockidx%x threadidx%x collapsed
+    113, Generating Tesla code
+        114,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     90, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -o arrays arrays.f90
 pgf90 -r8 -o arraysr8 arrays.f90
 pgf90 -O2 -acc -ta=nvidia -Minfo=accel -r8 -o arraysr8_acc arrays.f90
 main:
-     72, Generating copyout(t_a(:,:,:)) [if not already present]
-         Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t_b(:,:,:)) [if not already present]
-     73, Generating Tesla code
-         74,   ! blockidx%x threadidx%x collapsed
+     95, Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copy(t_b(:,:,:),t_a(:,:,:)) [if not already present]
+     96, Generating Tesla code
+         97,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     89, Generating copyout(t%a(:,:,:)) [if not already present]
+    112, Generating copy(t) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t%b(:,:,:)) [if not already present]
-     90, Generating Tesla code
-         91,   ! blockidx%x threadidx%x collapsed
+    113, Generating Tesla code
+        114,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     90, Generating implicit copyin(t) [if not already present]
 pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -r8 -o arraysr8_acc_managed arrays.f90
 main:
-     72, Generating copyout(t_a(:,:,:)) [if not already present]
-         Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t_b(:,:,:)) [if not already present]
-     73, Generating Tesla code
-         74,   ! blockidx%x threadidx%x collapsed
+     95, Generating copyin(dd(:,:,:)) [if not already present]
+         Generating copy(t_b(:,:,:),t_a(:,:,:)) [if not already present]
+     96, Generating Tesla code
+         97,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     89, Generating copyout(t%a(:,:,:)) [if not already present]
+    112, Generating copy(t) [if not already present]
          Generating copyin(dd(:,:,:)) [if not already present]
-         Generating copyout(t%b(:,:,:)) [if not already present]
-     90, Generating Tesla code
-         91,   ! blockidx%x threadidx%x collapsed
+    113, Generating Tesla code
+        114,   ! blockidx%x threadidx%x collapsed
              !$acc loop gang, vector(128) collapse(3) ! blockidx%x threadidx%x
-     90, Generating implicit copyin(t) [if not already present]
 Single Precision Results
 ./arrays
 Array size=   1000000000
-Array,       time(secs)=  2.483 sums=  1.000990033149719  0.000000000000000
-type%Array,  time(secs)= 22.699 sums=  0.031250000000000  0.000000000000000
+Array,       time(secs)=  2.494 sums=  1.000990033149719  0.000000000000000
+type%Array,  time(secs)= 22.967 sums=  0.031250000000000  0.000000000000000
 ./arrays_acc_managed
 Array size=   1000000000
-Array,       time(secs)=  1.753 sums=  1.000990033149719  0.000000000000000
-type%Array,  time(secs)=  1.211 sums=  0.031250000000000  0.000000000000000
+Array,       time(secs)=  2.782 sums=  1.000990033149719  0.000000000000000
+type%Array,  time(secs)=  1.348 sums=  0.031250000000000  0.000000000000000
 ./arrays_acc
 Array size=   1000000000
-Array,       time(secs)=  6.464 sums=  1.000990033149719  0.000000000000000
+Array,       time(secs)=  4.456 sums=  1.000990033149719  0.000000000000000
 Failing in Thread:1
 call to cuStreamSynchronize returned error 700: Illegal address during kernel execution
 
 Double Precision Results
 ./arraysr8
 Array size=   1000000000
-Array,       time(secs)= 34.630 sums=  0.999999992539933  1.000000082739080
-type%Array,  time(secs)= 34.488 sums=  0.999999992539933  1.000000082739080
+Array,       time(secs)= 36.612 sums=  0.999999992539933  1.000000082739080
+type%Array,  time(secs)= 36.460 sums=  0.999999992539933  1.000000082739080
 ./arraysr8_acc_managed
 Array size=   1000000000
-Array,       time(secs)=  3.799 sums=  0.999999999998084  1.000000082487792
-type%Array,  time(secs)=  2.628 sums=  0.999999992539933  1.000000082739080
+Array,       time(secs)=  3.840 sums=  0.999999999998084  1.000000082487792
+type%Array,  time(secs)=  2.474 sums=  0.999999992539933  1.000000082739080
 ./arraysr8_acc
 Array size=   1000000000
-Array,       time(secs)= 13.391 sums=  0.999999999998084  1.000000082487792
+Array,       time(secs)= 19.137 sums=  0.999999999998084  1.000000082487792
 Failing in Thread:1
 call to cuStreamSynchronize returned error 700: Illegal address during kernel execution
+
