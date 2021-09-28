@@ -57,6 +57,14 @@
 !
 !So double precision agrees to 17 decimal places whereas single precision to just 7
 !Why don't I see this for the sums above?
+!
+!Comparison of a type%a array timing between cpu and gpu which shows GPU offloading could potentially result in a 6x speed-up
+!array size cpu_time gpu_time cpu_sum           gpu_sum
+!10000      0.004  0.029  0.999999999998084  0.999999999998084
+!100000     0.032  0.035  1.000000000007918  1.000000000007918
+!1000000    0.282  0.100  0.999999999750170  0.999999999750170
+!10000000   2.765  0.472  1.000000002289867  1.000000002289867
+!100000000 27.752  4.301  0.999999992539933  0.999999992539933
 
 
 program main
