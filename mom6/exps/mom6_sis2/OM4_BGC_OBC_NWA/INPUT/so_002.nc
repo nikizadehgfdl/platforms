@@ -1,0 +1,1 @@
+../../datasets/grids/OM4_OBC_NWA/so_002.nc
