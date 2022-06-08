@@ -1,1 +1,2 @@
-module load PrgEnv-pgi/18.10
+module load nvhpc/22.2
+#was module load PrgEnv-pgi/18.10

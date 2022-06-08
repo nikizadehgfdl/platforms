@@ -1,0 +1,104 @@
+pgf90 -O2 -o laplace2d_f90 laplace2d.f90
+pgf90 -O2 -mp -Minfo -o laplace2d_f90_omp laplace2d.f90
+laplace:
+     40, !$omp parallel
+     45, Memory zero idiom, array assignment replaced by call to pgf90_mzero4
+     47, Loop not fused: different loop trip count
+         Loop not fused: dependence chain to sibling loop
+         2 loops fused
+         Generated vector simd code for the loop
+     49, Loop not fused: function call before adjacent loop
+         Loop not vectorized: unprofitable for target
+         Loop unrolled 2 times
+     50, Memory copy idiom, loop replaced by call to __c_mcopy4
+     51, Loop not fused: function call before adjacent loop
+         Generated vector simd code for the loop
+     54, !$omp parallel
+     60, !$omp parallel
+     70, Loop not vectorized/parallelized: contains call
+     73, !$omp parallel
+     98, sum reduction inlined
+         Loop not fused: function call before adjacent loop
+         Generated vector simd code for the loop containing reductions
+pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -o laplace2d_f90_acc_managed laplace2d.f90
+laplace:
+     53, Generating copyin(y0(:)) [if not already present]
+         Generating create(anew(:,:)) [if not already present]
+     55, Loop is parallelizable
+         Generating NVIDIA GPU code
+         55, !$acc loop gang, vector(128) ! blockidx%x threadidx%x
+     61, Loop is parallelizable
+         Generating NVIDIA GPU code
+         61, !$acc loop gang, vector(128) ! blockidx%x threadidx%x
+     69, Generating create(anew(:,:)) [if not already present]
+         Generating copyin(a(:,:)) [if not already present]
+         Generating present(a(:,:),anew(:,:))
+     75, Loop is parallelizable
+     76, Loop is parallelizable
+         Generating NVIDIA GPU code
+         75, !$acc loop gang, vector(128) collapse(2) ! blockidx%x threadidx%x
+             Generating implicit reduction(max:error)
+         76,   ! blockidx%x threadidx%x auto-collapsed
+     84, Loop is parallelizable
+     85, Loop is parallelizable
+         Generating NVIDIA GPU code
+         84, !$acc loop gang, vector(128) collapse(2) ! blockidx%x threadidx%x
+         85,   ! blockidx%x threadidx%x auto-collapsed
+     95, Generating update self(a(:,:))
+pgf90 -O2 -acc -ta=nvidia -Minfo=accel -o laplace2d_f90_acc laplace2d.f90
+laplace:
+     53, Generating copyin(y0(:)) [if not already present]
+         Generating create(anew(:,:)) [if not already present]
+     55, Loop is parallelizable
+         Generating NVIDIA GPU code
+         55, !$acc loop gang, vector(128) ! blockidx%x threadidx%x
+     61, Loop is parallelizable
+         Generating NVIDIA GPU code
+         61, !$acc loop gang, vector(128) ! blockidx%x threadidx%x
+     69, Generating create(anew(:,:)) [if not already present]
+         Generating copyin(a(:,:)) [if not already present]
+         Generating present(a(:,:),anew(:,:))
+     75, Loop is parallelizable
+     76, Loop is parallelizable
+         Generating NVIDIA GPU code
+         75, !$acc loop gang, vector(128) collapse(2) ! blockidx%x threadidx%x
+             Generating implicit reduction(max:error)
+         76,   ! blockidx%x threadidx%x auto-collapsed
+     84, Loop is parallelizable
+     85, Loop is parallelizable
+         Generating NVIDIA GPU code
+         84, !$acc loop gang, vector(128) collapse(2) ! blockidx%x threadidx%x
+         85,   ! blockidx%x threadidx%x auto-collapsed
+     95, Generating update self(a(:,:))
+pgf90 -o laplace2d_f90_noOPT laplace2d.f90
+./laplace2d_f90
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ completed in     52.999 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+./laplace2d_f90_omp
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ Number of OMP threads =             1
+ completed in     96.846 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             2
+ completed in     48.638 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             3
+ completed in     43.573 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             4
+ completed in     30.256 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             5
+ completed in     31.571 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             6
+ completed in     19.989 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             7
+ completed in     37.373 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+ Number of OMP threads =             8
+ completed in     22.396 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+./laplace2d_f90_acc
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ completed in      2.687 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+./laplace2d_f90_acc_managed
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ completed in      1.336 seconds, in 2421 iteration, sum(A)=76859.539062500000000
+./laplace2d_f90_noOPT
+Jacobi relaxation Calculation: 4096 x 4096 mesh
+ completed in    259.969 seconds, in 2421 iteration, sum(A)=76576.304687500000000
+
