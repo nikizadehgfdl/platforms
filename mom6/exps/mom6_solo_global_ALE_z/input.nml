@@ -15,7 +15,6 @@
             seconds = 0
             calendar = 'julian'
             ocean_nthreads = 1
-            ncores_per_node=32
             use_hyper_thread=.F.
 /
 
@@ -23,7 +22,7 @@
  /
 
  &fms_nml
-         clock_grain='MODULE',
+         clock_grain='ROUTINE'
          clock_flags='NONE',
          domains_stack_size = 8100000,
          stack_size = 0 /
