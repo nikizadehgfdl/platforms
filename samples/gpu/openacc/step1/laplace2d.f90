@@ -1,3 +1,112 @@
+!laplace2d is a simple benchamrk test for openMP and openACC
+!To compile
+! pgf90 -O2 -o laplace2d_f90 laplace2d.f90
+! pgf90 -O2 -mp -Minfo -o laplace2d_f90_omp laplace2d.f90
+! pgf90 -O2 -acc -ta=nvidia:managed -Minfo=accel -o laplace2d_f90_acc_managed laplace2d.f90
+! pgf90 -O2 -acc -ta=nvidia -Minfo=accel -o laplace2d_f90_acc laplace2d.f90
+!some results
+!    size  time(s) iterations initial_sum          final_sum
+!./laplace2d_f90
+!     512   0.396    2000    0.001294592395425    0.033113177865744
+!    1000   1.260    2000    0.000663465878461    0.017047453671694
+!    1024   1.344    2000    0.000647931126878    0.016649523749948
+!./laplace2d_f90_acc
+!     512   1.511    2000    0.001294592395425    0.033113177865744
+!    1000   1.573    2000    0.000663465878461    0.017047453671694
+!    1024   1.477    2000    0.000647931126878    0.016649523749948
+!./laplace2d_f90_acc_managed
+!     512   0.105    2000    0.001294592395425    0.033113177865744
+!    1000   0.162    2000    0.000663465878461    0.017047453671694
+!    1024   0.166    2000    0.000647931126878    0.016649523749948
+!
+
+program laplace
+  implicit none
+  integer, parameter :: fp_kind=kind(1.0)
+  integer, parameter :: n=1000, m=1000, iter_max=2000
+  integer :: i, j, iter, itermax
+  real(fp_kind), dimension (:,:), allocatable :: A, Anew
+  real(fp_kind), dimension (:),   allocatable :: y0
+  real(fp_kind) :: pi=2.0_fp_kind*asin(1.0_fp_kind), tol=1.0e-4_fp_kind, error=1.0_fp_kind
+  real(fp_kind) :: start_time, stop_time,sum0
+  integer :: nthread, OMP_GET_NUM_THREADS,OMP_GET_THREAD_NUM
+  !write(*,'(a,i5,a,i5,a)') 'Jacobi relaxation Calculation:', n, ' x', m, ' mesh'
+!$ do nthread = 1,8
+!$ call omp_set_num_threads(nthread)
+!$OMP PARALLEL 
+!$  if (OMP_GET_THREAD_NUM() .EQ. 0)  PRINT *, 'Number of OMP threads = ', OMP_GET_NUM_THREADS()
+!$OMP END PARALLEL
+  allocate ( A(0:n-1,0:m-1), Anew(0:n-1,0:m-1) )
+  allocate ( y0(0:m-1) )
+  A = 0.0_fp_kind
+  ! Set B.C.
+  y0 = sin(pi* (/ (j,j=0,m-1) /) /(m-1))
+  A(0,:)   = 0.0_fp_kind
+  A(n-1,:) = 0.0_fp_kind
+  A(:,0)   = y0
+  A(:,m-1) = y0*exp(-pi)
+  sum0=sum(A)/n/m
+  !write(*,'(a,f21.15)')  'debug:  sum(A)=',sum0 
+
+  !
+  !Start timing
+  !
+  call cpu_time(start_time)
+ 
+!$acc kernels copyin(y0) create(Anew)
+!$omp parallel do shared(Anew)
+  do i=1,m-1
+    Anew(0,i)   = 0.0_fp_kind
+    Anew(n-1,i) = 0.0_fp_kind
+  end do
+!$end omp parallel do
+!$omp parallel do shared(Anew)
+  do i=1,n-1
+    Anew(i,0)   = y0(i)
+    Anew(i,m-1) = y0(i)*exp(-pi)
+  end do
+!$end omp parallel do
+!$acc end kernels
+  iter=0
+  error=1.0_fp_kind
+!$acc data copyin(A) create(Anew) !We do need to copy in A to device and allocate Anew on the device.
+!  do while ( error .gt. tol )
+  do while ( iter < iter_max )
+!$acc kernels present(A,Anew)   !Tell compiler to reuse A,Anew on the device
+    error=0.0_fp_kind
+!$omp parallel shared(m, n, Anew, A) firstprivate(iter) 
+!$omp do reduction( max:error )
+    do j=1,m-2
+      do i=1,n-2
+        Anew(i,j) = 0.25_fp_kind * ( A(i+1,j  ) + A(i-1,j  ) + &
+                                     A(i  ,j-1) + A(i  ,j+1) )
+        error = max( error, abs(Anew(i,j)-A(i,j)) )
+      end do
+    end do
+!$omp end do
+!$omp do
+    do j=1,m-2
+      do i=1,n-2
+        A(i,j) = Anew(i,j)
+      end do
+    end do
+!$omp end do
+!$omp end parallel
+!$acc end kernels
+    iter = iter +1
+  end do
+!$acc update self(A)
+!$acc end data
+  call cpu_time(stop_time) 
+!  write(*,'(a,f8.3,a,i5,a,f21.15)')  ' completed in ', stop_time-start_time, ' seconds, in ',&
+!                                     iter,' iterations, sum(A)=',sum(A)/n/m 
+  write(*,'(a)')  '    size  time(s) iterations initial_sum          final_sum'
+  write(*,'(i8,f8.3,i8,f21.15,f21.15)')  n, stop_time-start_time,iter,sum0,sum(A)/n/m 
+  deallocate (A,Anew,y0)
+!$ enddo
+end program laplace
+
+
 ! Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -23,80 +132,3 @@
 ! OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 ! (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-program laplace
-  implicit none
-  integer, parameter :: fp_kind=kind(1.0)
-  integer, parameter :: n=4096, m=4096, iter_max=1000
-  integer :: i, j, iter, itermax
-  real(fp_kind), dimension (:,:), allocatable :: A, Anew
-  real(fp_kind), dimension (:),   allocatable :: y0
-  real(fp_kind) :: pi=2.0_fp_kind*asin(1.0_fp_kind), tol=1.0e-4_fp_kind, error=1.0_fp_kind
-  real(fp_kind) :: start_time, stop_time
-  integer :: nthread, OMP_GET_NUM_THREADS,OMP_GET_THREAD_NUM
-  write(*,'(a,i5,a,i5,a)') 'Jacobi relaxation Calculation:', n, ' x', m, ' mesh'
-!$ do nthread = 1,8
-!$ call omp_set_num_threads(nthread)
-!$OMP PARALLEL 
-!$  if (OMP_GET_THREAD_NUM() .EQ. 0)  PRINT *, 'Number of OMP threads = ', OMP_GET_NUM_THREADS()
-!$OMP END PARALLEL
-  allocate ( A(0:n-1,0:m-1), Anew(0:n-1,0:m-1) )
-  allocate ( y0(0:m-1) )
-  A = 0.0_fp_kind
-  ! Set B.C.
-  y0 = sin(pi* (/ (j,j=0,m-1) /) /(m-1))
-  A(0,:)   = 0.0_fp_kind
-  A(n-1,:) = 0.0_fp_kind
-  A(:,0)   = y0
-  A(:,m-1) = y0*exp(-pi)
-  call cpu_time(start_time) 
-!$acc kernels copyin(y0) create(Anew)
-!$omp parallel do shared(Anew)
-  do i=1,m-1
-    Anew(0,i)   = 0.0_fp_kind
-    Anew(n-1,i) = 0.0_fp_kind
-  end do
-!$end omp parallel do
-!$omp parallel do shared(Anew)
-  do i=1,n-1
-    Anew(i,0)   = y0(i)
-    Anew(i,m-1) = y0(i)*exp(-pi)
-  end do
-!$end omp parallel do
-!$acc end kernels
-  iter=0
-  error=1.0_fp_kind
-!$acc data copyin(A) create(Anew) !We do need to copy in A to device and allocate Anew on the device.
-  do while ( error .gt. tol )
-!$acc kernels present(A,Anew)   !Tell compiler to reuse A,Anew on the device
-    error=0.0_fp_kind
-!$omp parallel shared(m, n, Anew, A) firstprivate(iter) 
-!$omp do reduction( max:error )
-    do j=1,m-2
-      do i=1,n-2
-        Anew(i,j) = 0.25_fp_kind * ( A(i+1,j  ) + A(i-1,j  ) + &
-                                     A(i  ,j-1) + A(i  ,j+1) )
-        error = max( error, abs(Anew(i,j)-A(i,j)) )
-      end do
-    end do
-!$omp end do
-!$omp do
-    do j=1,m-2
-      do i=1,n-2
-        A(i,j) = Anew(i,j)
-      end do
-    end do
-!$omp end do
-!$omp end parallel
-!$acc end kernels
-    iter = iter +1
-    itermax = iter
-  end do
-!$acc update self(A)
-!$acc end data
-  call cpu_time(stop_time) 
-  write(*,'(a,f10.3,a,i4,a,f21.15)')  ' completed in ', stop_time-start_time, ' seconds, in ',&
-                                     itermax,' iteration, sum(A)=',sum(A) 
-  deallocate (A,Anew,y0)
-!$ enddo
-end program laplace

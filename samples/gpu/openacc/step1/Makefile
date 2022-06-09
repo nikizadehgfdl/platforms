@@ -28,16 +28,24 @@ CC       = pgcc
 CCFLAGS  = -I../common
 ACCFLAGS = -acc -ta=nvidia:managed,time -Minfo=accel
 OMPFLAGS = -fast -mp -Minfo
+FASTFLAGS = -O2
 
-BIN =  laplace2d_omp laplace2d_acc_managed
+
+BIN =  laplace2d_c laplace2d_c_omp laplace2d_c_acc_managed laplace2d_c_acc
 
 all: $(BIN)
 
-laplace2d_acc_managed: laplace2d.c
-	$(CC) $(CCFLAGS) $(ACCFLAGS) -o $@ $<
+laplace2d_c_acc_managed: laplace2d.c
+	$(CC) $(CCFLAGS) $(FASTFLAGS) $(ACCFLAGS) -o $@ $<
 
-laplace2d_omp: laplace2d.c
-	$(CC) $(CCFLAGS) $(OMPFLAGS) -o $@ $<
+laplace2d_c_acc: laplace2d.c
+	$(CC) $(CCFLAGS) $(FASTFLAGS) -acc -o $@ $<
+
+laplace2d_c_omp: laplace2d.c
+	$(CC) $(CCFLAGS) $(FASTFLAGS) $(OMPFLAGS) -o $@ $<
+
+laplace2d_c: laplace2d.c
+	$(CC) $(CCFLAGS) $(FASTFLAGS) -o $@ $<
 
 clean:
 	$(RM) $(BIN)
