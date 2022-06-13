@@ -11,15 +11,35 @@
 ./laplace2d_c
      512   0.350    2000    0.001294592279010    0.033113095909357
     1000   1.130    2000    0.000663465936668    0.017047340050340
+    1024   1.310    2000    0.000647931185085    0.016649417579174
 ./laplace2d_c_acc
      512   3.970    2000    0.001294592046179    0.033113196492195
     1000   7.800    2000    0.000663466518745    0.017047470435500
+    1024   8.680    2000    0.000647930952255    0.016649551689625
 ./laplace2d_c_acc_managed
      512   3.310    2000    0.001294592046179    0.033113196492195
     1000   8.440    2000    0.000663466518745    0.017047470435500
-./laplace2d_cl
+    1024   8.840    2000    0.000647930952255    0.016649551689625
+
+clang -O2 -o laplace2d_cl   laplace2d.c -lm; ./laplace2d_cl
      512   0.550    2000    0.001294593093917    0.033108580857515
     1000   2.200    2000    0.000663466402330    0.017042662948370
+    1024   2.490    2000    0.000647931243293    0.016644719988108
+my llvm/clang -O2
+    1024   6.060    2000    0.000647931243293    0.016644719988108
+    1024   6.060    2000    0.000647931243293    0.016644719988108
+my llvm/clang -O3
+    1024   6.060    2000    0.000647931243293    0.016644719988108
+my llvm/clang -O1
+    1024   6.870    2000    0.000647931243293    0.016644719988108
+my llvm/clang -O0
+    1024  23.740    2000    0.000647931243293    0.016644719988108
+/home/Niki.Zadeh/llvm-project/install/bin/clang laplace2d.c -o laplace2d_mycl_omp -L/opt/gcc/11.3.0/lib64  -lm -O3 -fopenmp ; ./laplace2d_mycl_omp 
+    1024 334.450    2000    0.000647931243293    0.016644719988108
+
+
+gcc -O2 -o laplace2d_gcc laplace2d.c -lm ; ./laplace2d_gcc
+    1024   3.580    2000    0.000647931243293    0.016644719988108
 
  */
 
@@ -27,6 +47,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
 int main(int argc, char** argv)
 {
@@ -35,7 +56,7 @@ int main(int argc, char** argv)
     int iter_max = 2000;
     
     const float pi  = 2.0f * asinf(1.0f);
-    const float tol = 1.0e-4f;
+    //const float tol = 1.0e-4f;
     float error     = 1.0f;
     
     float A[n][m];
@@ -44,13 +65,12 @@ int main(int argc, char** argv)
 
     //printf("Jacobi relaxation Calculation: %d x %d mesh\n", n, m);
 
-    /*
     for(int nthread = 1; nthread<9; nthread++){
       omp_set_dynamic(0);
       omp_set_num_threads(nthread);
-      printf ("Inner: num_thds=%d\n", omp_get_num_threads());
-    */
+
     memset(A, 0, n * m * sizeof(float));
+    memset(Anew, 0, n * m * sizeof(float));
     
     // set boundary conditions
     for (int i = 0; i < m; i++){
@@ -63,8 +83,7 @@ int main(int argc, char** argv)
         A[j][0] = y0[j];
         A[j][m-1] = y0[j]*expf(-pi);
     }
-      
-    
+          
     float sum0=0.0;
     for( int j = 0; j < n; j++){
 	for( int i = 0; i < m; i++ ){
@@ -73,33 +92,29 @@ int main(int argc, char** argv)
     }
     //printf("debug:  sum(A)=%21.15f \n",  sum0/n/m);
     
-
     /*
     Start timing
     */
-    int msec = 0; 
     clock_t before = clock();
-
-#pragma omp parallel for shared(Anew)
-    for (int i = 1; i < m; i++)
-    {
+#pragma omp parallel
+#pragma omp for  
+    for (int i = 1; i < m; i++){
        Anew[0][i]   = 0.f;
        Anew[n-1][i] = 0.f;
     }
-#pragma omp parallel for shared(Anew)    
-    for (int j = 1; j < n; j++)
-    {
+#pragma omp for  
+    for (int j = 1; j < n; j++){
         Anew[j][0]   = y0[j];
         Anew[j][m-1] = y0[j]*expf(-pi);
     }
-    
+        
     int iter = 0;
     //   while ( error > tol)
     while (iter < iter_max)
    {
+#pragma acc kernels present(A,Anew) //Tell compiler to reuse A,Anew on the device
         error = 0.f;
-#pragma omp parallel for shared(m, n, Anew, A)
-#pragma acc kernels
+#pragma omp for
         for( int j = 1; j < n-1; j++){
             for( int i = 1; i < m-1; i++ ){
                 Anew[j][i] = 0.25f * ( A[j][i+1] + A[j][i-1]
@@ -108,16 +123,17 @@ int main(int argc, char** argv)
             }
         }
         
-#pragma omp parallel for shared(m, n, Anew, A)
-#pragma acc kernels
+#pragma omp for
         for( int j = 1; j < n-1; j++){
             for( int i = 1; i < m-1; i++ ){
                 A[j][i] = Anew[j][i];    
             }
         }
-    //    if(iter % 100 == 0) printf("%5d, %0.6f\n", iter, error);  
+#pragma acc kernels end
         iter++;
     }
+#pragma acc update self(A)
+#pragma acc end data
 
     clock_t difference = clock() - before;
     float runtime = difference * 1000 / CLOCKS_PER_SEC/1000.f;
@@ -131,10 +147,10 @@ int main(int argc, char** argv)
     
     //printf(" total: %f s\n", runtime / 1000.f);
     //printf(" completed in %8.3f seconds, in %5d iterations, sum(A)=%21.15f \n", runtime / 1000.f, iter, sumA/n/m);
-    printf("    size  time(s) iterations initial_sum          final_sum \n");
+    printf("    size  time(s) iterations initial_sum          final_sum    , nthreads=%4d \n",nthread);
     printf("%8d%8.3f%8d%21.15f%21.15f\n",  n, runtime,iter,sum0/n/m,sumA/n/m); 
 
-    //} //end omp for
+    } //end omp for
 
 }
 
