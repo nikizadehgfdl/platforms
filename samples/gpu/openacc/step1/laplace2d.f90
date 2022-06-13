@@ -20,16 +20,16 @@
 !     512   0.105    2000    0.001294592395425    0.033113177865744
 !    1000   0.162    2000    0.000663465878461    0.017047453671694
 !    1024   0.166    2000    0.000647931126878    0.016649523749948
-!./laplace2d_f90_omp
-!    size  time(s) iterations initial_sum          final_sum        NumOMPthreads
-!    1000   4.140    2000    0.000663465878461    0.017047453671694  1
-!    1000   2.069    2000    0.000663465878461    0.017047453671694  2
-!    1000   1.751    2000    0.000663465878461    0.017047453671694  3
-!    1000   1.092    2000    0.000663465878461    0.017047453671694  4
-!    1000   1.115    2000    0.000663465878461    0.017047453671694  5
-!    1000   0.885    2000    0.000663465878461    0.017047453671694  6
-!    1000   0.816    2000    0.000663465878461    0.017047453671694  7
-!    1000   0.557    2000    0.000663465878461    0.017047453671694  8
+!pgf90 -O2 -mp -Minfo -o laplace2d_f90_omp laplace2d.f90;  ./laplace2d_f90_omp
+!    size  time(s) iterations initial_sum          final_sum          omp_nthreads
+!    1000   3.917    2000    0.000663465878461    0.017047453671694    1
+!    1000   2.010    2000    0.000663465878461    0.017047453671694    2
+!    1000   1.697    2000    0.000663465878461    0.017047453671694    3
+!    1000   1.074    2000    0.000663465878461    0.017047453671694    4
+!    1000   1.162    2000    0.000663465878461    0.017047453671694    5
+!    1000   0.774    2000    0.000663465878461    0.017047453671694    6
+!    1000   0.824    2000    0.000663465878461    0.017047453671694    7
+!    1000   0.601    2000    0.000663465878461    0.017047453671694    8
 !
 
 program laplace
@@ -41,13 +41,12 @@ program laplace
   real(fp_kind), dimension (:),   allocatable :: y0
   real(fp_kind) :: pi=2.0_fp_kind*asin(1.0_fp_kind), tol=1.0e-4_fp_kind, error=1.0_fp_kind
   real(fp_kind) :: start_time, stop_time,sum0
+  real*8 :: run_time, omp_get_wtime
   integer :: nthread, OMP_GET_NUM_THREADS,OMP_GET_THREAD_NUM
   !write(*,'(a,i5,a,i5,a)') 'Jacobi relaxation Calculation:', n, ' x', m, ' mesh'
+  nthread = 1
 !$ do nthread = 1,8
 !$ call omp_set_num_threads(nthread)
-!$OMP PARALLEL 
-!$  if (OMP_GET_THREAD_NUM() .EQ. 0)  PRINT *, 'Number of OMP threads = ', OMP_GET_NUM_THREADS()
-!$OMP END PARALLEL
   allocate ( A(0:n-1,0:m-1), Anew(0:n-1,0:m-1) )
   allocate ( y0(0:m-1) )
   A = 0.0_fp_kind
@@ -64,6 +63,7 @@ program laplace
   !Start timing
   !
   call cpu_time(start_time)
+!$   run_time = omp_get_wtime();
  
 !$acc kernels copyin(y0) create(Anew)
 !$omp parallel do shared(Anew)
@@ -86,7 +86,7 @@ program laplace
   do while ( iter < iter_max )
 !$acc kernels present(A,Anew)   !Tell compiler to reuse A,Anew on the device
     error=0.0_fp_kind
-!$omp parallel shared(m, n, Anew, A) firstprivate(iter) 
+!$omp parallel shared(Anew, A) firstprivate(iter) 
 !$omp do reduction( max:error )
     do j=1,m-2
       do i=1,n-2
@@ -110,10 +110,13 @@ program laplace
 !$acc update self(A)
 !$acc end data
   call cpu_time(stop_time) 
-!  write(*,'(a,f8.3,a,i5,a,f21.15)')  ' completed in ', stop_time-start_time, ' seconds, in ',&
-!                                     iter,' iterations, sum(A)=',sum(A)/n/m 
-  write(*,'(a)')  '    size  time(s) iterations initial_sum          final_sum'
-  write(*,'(i8,f8.3,i8,f21.15,f21.15)')  n, stop_time-start_time,iter,sum0,sum(A)/n/m 
+!$   run_time = omp_get_wtime() - run_time;
+
+  if(nthread == 1) then
+     write(*,'(a)')  '    size  time(s) iterations initial_sum          final_sum          omp_nthreads'
+     run_time = stop_time-start_time !Gives wrong time for nthread>1 with Intel
+  endif
+  write(*,'(i8,f8.3,i8,f21.15,f21.15,i5)')  n, run_time,iter,sum0,sum(A)/n/m,nthread 
   deallocate (A,Anew,y0)
 !$ enddo
 end program laplace

@@ -20,6 +20,18 @@
      512   3.310    2000    0.001294592046179    0.033113196492195
     1000   8.440    2000    0.000663466518745    0.017047470435500
     1024   8.840    2000    0.000647930952255    0.016649551689625
+pgcc -I../common -O2 -fopenmp -o laplace2d_pgcc_omp laplace2d.c ; ./laplace2d_pgcc_omp
+    size  time(s) iterations initial_sum          final_sum        omp_nthreads
+    1000   1.184    2000    0.000663466518745    0.017047470435500    1
+    1000   1.114    2000    0.000663466518745    0.017047470435500    2
+    1000   1.114    2000    0.000663466518745    0.017047470435500    3
+    1000   1.114    2000    0.000663466518745    0.017047470435500    4
+    1000   1.111    2000    0.000663466518745    0.017047470435500    5
+    1000   1.112    2000    0.000663466518745    0.017047470435500    6
+    1000   1.114    2000    0.000663466518745    0.017047470435500    7
+    1000   1.112    2000    0.000663466518745    0.017047470435500    8
+!!!!!!!!!!!!!! NO OPENMP SPEED-UP ! WHAT IS WRONG WITH THIS ???????????????????
+!!!!!!!!!!!!!! WHY DIFFERENT SUMS for OMP_THREADS=1 ???
 
 clang -O2 -o laplace2d_cl   laplace2d.c -lm; ./laplace2d_cl
      512   0.550    2000    0.001294593093917    0.033108580857515
@@ -58,7 +70,7 @@ int main(int argc, char** argv)
     const float pi  = 2.0f * asinf(1.0f);
     //const float tol = 1.0e-4f;
     float error     = 1.0f;
-    
+    double runtime; 
     float A[n][m];
     float Anew[n][m];
     float y0[n];
@@ -66,8 +78,8 @@ int main(int argc, char** argv)
     //printf("Jacobi relaxation Calculation: %d x %d mesh\n", n, m);
 
     for(int nthread = 1; nthread<9; nthread++){
-      omp_set_dynamic(0);
-      omp_set_num_threads(nthread);
+    omp_set_dynamic(0);
+    omp_set_num_threads(nthread);
 
     memset(A, 0, n * m * sizeof(float));
     memset(Anew, 0, n * m * sizeof(float));
@@ -96,6 +108,7 @@ int main(int argc, char** argv)
     Start timing
     */
     clock_t before = clock();
+    runtime = omp_get_wtime();
 #pragma omp parallel
 #pragma omp for  
     for (int i = 1; i < m; i++){
@@ -112,14 +125,14 @@ int main(int argc, char** argv)
     //   while ( error > tol)
     while (iter < iter_max)
    {
-#pragma acc kernels present(A,Anew) //Tell compiler to reuse A,Anew on the device
+//#pragma acc kernels present(A,Anew) //Tell compiler to reuse A,Anew on the device
         error = 0.f;
 #pragma omp for
         for( int j = 1; j < n-1; j++){
             for( int i = 1; i < m-1; i++ ){
                 Anew[j][i] = 0.25f * ( A[j][i+1] + A[j][i-1]
                                      + A[j-1][i] + A[j+1][i]);
-                error = fmaxf( error, fabsf(Anew[j][i]-A[j][i]));
+//                error = fmaxf( error, fabsf(Anew[j][i]-A[j][i]));
             }
         }
         
@@ -129,14 +142,15 @@ int main(int argc, char** argv)
                 A[j][i] = Anew[j][i];    
             }
         }
-#pragma acc kernels end
+//#pragma acc kernels end
         iter++;
     }
-#pragma acc update self(A)
-#pragma acc end data
+//#pragma acc update self(A)
+//#pragma acc end data
 
     clock_t difference = clock() - before;
-    float runtime = difference * 1000 / CLOCKS_PER_SEC/1000.f;
+    runtime = omp_get_wtime() - runtime;
+//    float runtime = difference * 1000 / CLOCKS_PER_SEC/1000.f;
 
     float sumA=0.0;
     for( int j = 0; j < n; j++){
@@ -147,8 +161,8 @@ int main(int argc, char** argv)
     
     //printf(" total: %f s\n", runtime / 1000.f);
     //printf(" completed in %8.3f seconds, in %5d iterations, sum(A)=%21.15f \n", runtime / 1000.f, iter, sumA/n/m);
-    printf("    size  time(s) iterations initial_sum          final_sum    , nthreads=%4d \n",nthread);
-    printf("%8d%8.3f%8d%21.15f%21.15f\n",  n, runtime,iter,sum0/n/m,sumA/n/m); 
+    if(nthread == 1 ) printf("    size  time(s) iterations initial_sum          final_sum        omp_nthreads\n");
+    printf("%8d%8.3f%8d%21.15f%21.15f%5d\n",  n, runtime,iter,sum0/n/m,sumA/n/m,nthread); 
 
     } //end omp for
 
