@@ -291,58 +291,8 @@ int main(int argc, char** argv)
     float y[Nl];
     
     printf("     size     time(s) iterations initial_sum          final_sum        omp_nthreads\n");
-    printf("2D arrays, iteration outside ij loop\n");
-    for(int nthread = -1; nthread<1; nthread++){
-      memset(A,   0, n * m * sizeof(float));
-      memset(B,   0, n * m * sizeof(float));
-      memset(A1d, 0, n * m * sizeof(float));   
-      // set boundary conditions
-      for (int i = 0; i < m; i++){
-        A[0][i]   = 0.f;
-        A[n-1][i] = 0.f;
-      }
-      for (int j = 0; j < n; j++){
-        y0[j] = sinf(pi * j / (n-1));
-        A[j][0] = y0[j];
-        A[j][m-1] = y0[j]*expf(-pi);
-      }
-
-      for (int i = 1; i < m; i++){  //Why i=1?
-	B[0][i]   = 0.f;
-	B[n-1][i] = 0.f;
-      }    
-      for (int j = 1; j < n; j++){ //Why j=1?
-        B[j][0]   = y0[j];
-        B[j][m-1] = y0[j]*expf(-pi);
-      }  
-        
-      float sum0=0.0;
-      for( int j = 0; j < n; j++){
-	for( int i = 0; i < m; i++ ){
-	  A1d[j*m+i] = A[j][i];
-	  sum0 += A[j][i];
-	}}
-    
-      runtime = omp_get_wtime();//Start timer
-      //Calculate
-      //if(nthread > 0  ) transform_2darray_omp(nthread,iter_max,m,n,A);
-      if(nthread ==  0) ave4pt_2darray(nthread,iter_max,m,n,A,B);
-      //if(nthread == -1) transform_2darray_omp_teams(nthread,iter_max,m,n,A);
-      //if(nthread == -2) transform_2darray_omp_gpu(nthread,iter_max,m,n,A);
-      if(nthread == -1) ave4pt_2darray_omp_gpu(nthread,iter_max,m,n,A,B);
-      runtime = omp_get_wtime() - runtime;//End timer
-
-      float sumB=0.0;
-      for( int j = 0; j < n; j++){
-	for( int i = 0; i < m; i++ ){
-	  sumB += B[j][i];    
-	}}
-      printf("%12d%8.3f%8d%21.15f%21.15f%5d\n",  n*m, runtime,iter_max,sum0/n/m,sumB/n/m,nthread); 
-    } //end omp for
-
-    printf("     size     time(s) iterations initial_sum          final_sum        omp_nthreads\n");
     printf("2D arrays\n");
-    for(int nthread = -3; nthread<3; nthread++){
+    for(int nthread = -3; nthread<4; nthread++){
       memset(A,   0, n * m * sizeof(float));
       memset(A1d, 0, n * m * sizeof(float));   
       // set boundary conditions
@@ -440,19 +390,77 @@ int main(int argc, char** argv)
       }
       printf("%12d%8.3f%8d%21.15f%5d\n",  n*m, runtime,iter_max,sum/n/m,nthread); 
     }   
+    //2D arrays, iteration outside ij loop
+    printf("     size     time(s) iterations initial_sum          final_sum        omp_nthreads\n");
+    printf("2D arrays, iteration outside ij loop\n");
+    for(int nthread = -1; nthread<1; nthread++){
+      memset(A,   0, n * m * sizeof(float));
+      memset(B,   0, n * m * sizeof(float));
+      memset(A1d, 0, n * m * sizeof(float));   
+      // set boundary conditions
+      for (int i = 0; i < m; i++){
+        A[0][i]   = 0.f;
+        A[n-1][i] = 0.f;
+      }
+      for (int j = 0; j < n; j++){
+        y0[j] = sinf(pi * j / (n-1));
+        A[j][0] = y0[j];
+        A[j][m-1] = y0[j]*expf(-pi);
+      }
+
+      for (int i = 1; i < m; i++){  //Why i=1?
+	B[0][i]   = 0.f;
+	B[n-1][i] = 0.f;
+      }    
+      for (int j = 1; j < n; j++){ //Why j=1?
+        B[j][0]   = y0[j];
+        B[j][m-1] = y0[j]*expf(-pi);
+      }  
+        
+      float sum0=0.0;
+      for( int j = 0; j < n; j++){
+	for( int i = 0; i < m; i++ ){
+	  A1d[j*m+i] = A[j][i];
+	  sum0 += A[j][i];
+	}}
+    
+      runtime = omp_get_wtime();//Start timer
+      //Calculate
+      //if(nthread > 0  ) transform_2darray_omp(nthread,iter_max,m,n,A);
+      if(nthread ==  0) ave4pt_2darray(nthread,iter_max,m,n,A,B);
+      //if(nthread == -1) transform_2darray_omp_teams(nthread,iter_max,m,n,A);
+      //if(nthread == -2) transform_2darray_omp_gpu(nthread,iter_max,m,n,A);
+      if(nthread == -1) ave4pt_2darray_omp_gpu(nthread,iter_max,m,n,A,B);
+      runtime = omp_get_wtime() - runtime;//End timer
+
+      float sumB=0.0;
+      for( int j = 0; j < n; j++){
+	for( int i = 0; i < m; i++ ){
+	  sumB += B[j][i];    
+	}}
+      printf("%12d%8.3f%8d%21.15f%21.15f%5d\n",  n*m, runtime,iter_max,sum0/n/m,sumB/n/m,nthread); 
+    } //end omp for
+
 }
 
 /*Some results
-pgcc -O3 -mp -Minfo -o benchmark1_pgcc benchmark1.c ; ./benchmark1_pgcc
-    size  time(s) iterations initial_sum          final_sum        omp_nthreads
+pgcc -O3 -mp -Mpreprocess -fast -ta=tesla,cuda11.7,cc60 -o benchmark1_pgcc benchmark1.c ; ./benchmark1_pgcc
+     size     time(s) iterations initial_sum          final_sum        omp_nthreads
 2D arrays
-     1000000  10.884    2000    0.000663466169499    0.000026498437364   -3
-     1000000  10.941    2000    0.000663466169499    0.000026498437364   -2
-     1000000   7.654    2000    0.000663466169499    0.000026498437364   -1
-     1000000   7.643    2000    0.000663466169499    0.000026498437364    0
-     1000000  10.987    2000    0.000663466169499    0.000026498437364    1
-     1000000  10.398    2000    0.000663466169499    0.000000965578010    2
-
+     1000000  12.461    2000    0.000663466169499    0.000026498426450   -3
+     1000000  11.340    2000    0.000663466169499    0.000026498426450   -2
+     1000000   7.852    2000    0.000663466169499    0.000026498426450   -1
+     1000000   7.909    2000    0.000663466169499    0.000026498426450    0
+     1000000  11.234    2000    0.000663466169499    0.000026498426450    1
+     1000000  19.082    2000    0.000663466169499    0.000007004406598    2
+     1000000  18.727    2000    0.000663466169499    0.000004531497325    3
+Equivalent 1D arrays
+     1000000  11.082    2000    0.000663466169499    0.000026498426450   -3
+     1000000  11.124    2000    0.000663466169499    0.000026498426450   -2
+     1000000   7.587    2000    0.000663466169499    0.000026498426450   -1
+     1000000   7.621    2000    0.000663466169499    0.000026498426450    0
+     1000000  10.897    2000    0.000663466169499    0.000026498426450    1
+     1000000  10.874    2000    0.000663466169499    0.000002505697466    2
 
 
 Niki.Zadeh: ~/platforms/samples/gpu/openacc/step1 $ \rm benchmark1; clang benchmark1.c -o benchmark1 -L/opt/gcc/11.3.0/lib64  -lm -O3 -fopenmp  -fopenmp-targets=nvptx64; ./benchmark1
