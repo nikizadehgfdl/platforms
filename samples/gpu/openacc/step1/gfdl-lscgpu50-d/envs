@@ -1,2 +1,4 @@
 module load nvhpc/22.2
-#was module load PrgEnv-pgi/18.10
+unlimit stacksize
+#bash
+ulimit -s unlimited 

@@ -216,7 +216,8 @@ void transform_2darray_omp_teams(int nthread, int iter_max, int m, int n,float A
 NVC++-S-0155-TEAMS construct must be contained within TARGET construct  (benchmark1.c: 129)
 NVC++-S-0155-TARGET construct can contain only one TEAMS construct, must contain no statements, declarations or directives outside of the TEAMS construct. 
   */
-  //#pragma omp teams distribute parallel for 
+  //#pragma omp teams distribute parallel for
+#pragma omp target teams distribute parallel for map(tofrom: A[0:n][0:m],iter) 
   for( int j = 0; j < n; j++){
     for( int i = 0; i < m; i++ ){
       iter=0;
@@ -255,7 +256,8 @@ void ave4pt_2darray_omp_gpu(int nthread, int iter_max, int m, int n,float A[][m]
 { 
   int iter=0;  
   //#pragma omp target teams map(tofrom: A[0:n][0:m],B[0:n][0:m])//does not transfer data properly
-#pragma omp target data map(to: A[0:n][0:m],B[0:n][0:m]) map(from: A[0:n][0:m])
+  //#pragma omp target data map(to: A[0:n][0:m],B[0:n][0:m]) map(from: A[0:n][0:m])//compiler error clang10.0.1 /home/Niki.Zadeh/opt/classic-flang-llvm/install/bin/clang 
+#pragma omp target data map(tofrom: A[0:n][0:m],B[0:n][0:m])
 {
   iter=0;
   while (iter < iter_max){
@@ -292,7 +294,7 @@ int main(int argc, char** argv)
     
     printf("     size     time(s) iterations initial_sum          final_sum        omp_nthreads\n");
     printf("2D arrays\n");
-    for(int nthread = -3; nthread<4; nthread++){
+    for(int nthread = -3; nthread<3; nthread++){
       memset(A,   0, n * m * sizeof(float));
       memset(A1d, 0, n * m * sizeof(float));   
       // set boundary conditions
@@ -330,7 +332,7 @@ int main(int argc, char** argv)
 	}}
       printf("%12d%8.3f%8d%21.15f%21.15f%5d\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread); 
     } //end omp for
-
+    //exit(0);
     /*
     1d tests
     */
@@ -444,11 +446,14 @@ int main(int argc, char** argv)
 }
 
 /*Some results
+module load cuda/11.7
+module load nvhpc-no-mpi/22.5
+ulimit -s unlimited 
 pgcc -O3 -mp -Mpreprocess -fast -ta=tesla,cuda11.7,cc60 -o benchmark1_pgcc benchmark1.c ; ./benchmark1_pgcc
      size     time(s) iterations initial_sum          final_sum        omp_nthreads
 2D arrays
-     1000000  12.461    2000    0.000663466169499    0.000026498426450   -3
-     1000000  11.340    2000    0.000663466169499    0.000026498426450   -2
+     1000000  12.461    2000    0.000663466169499    0.000026498426450   -3 !!!GPUs Idle !!!
+     1000000  11.340    2000    0.000663466169499    0.000026498426450   -2!!!GPUs Idle !!!
      1000000   7.852    2000    0.000663466169499    0.000026498426450   -1
      1000000   7.909    2000    0.000663466169499    0.000026498426450    0
      1000000  11.234    2000    0.000663466169499    0.000026498426450    1
@@ -462,8 +467,14 @@ Equivalent 1D arrays
      1000000  10.897    2000    0.000663466169499    0.000026498426450    1
      1000000  10.874    2000    0.000663466169499    0.000002505697466    2
 
-
-Niki.Zadeh: ~/platforms/samples/gpu/openacc/step1 $ \rm benchmark1; clang benchmark1.c -o benchmark1 -L/opt/gcc/11.3.0/lib64  -lm -O3 -fopenmp  -fopenmp-targets=nvptx64; ./benchmark1
+>bash
+$ clang --version
+clang version 14.0.5 (/home/Niki.Zadeh/opt/llvm/llvm-project/clang c12386ae247c0d46e1d513942e322e3a0510b126)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /home/Niki.Zadeh/opt/llvm/install/bin
+$ ulimit -s unlimited
+$ \rm benchmark1_cl_omp_targ; /home/Niki.Zadeh/opt/llvm/install/bin/clang  -L/opt/gcc/11.3.0/lib64  -lm -O3 -fopenmp  -fopenmp-targets=nvptx64 benchmark1.c -o benchmark1_cl_omp_targ; ./benchmark1_cl_omp_targ
 clang-14: warning: CUDA version is newer than the latest supported version 11.5 [-Wunknown-cuda-version]
 2D arrays
      1000000   0.074    2000    0.000663466402330    0.000026498402804   -3
@@ -505,6 +516,9 @@ More 1D array tests
     16000000  60.869    2000 2730.884033203125000    1
     16000000 213.520    2000 2730.884033203125000    2
 
+NOTE: with the above clang  -fopenmp  -fopenmp-targets=nvptx64 GPU is being  
+      used for all threads. That's why the timings gets worse with threads!
+      clang  -fopenmp GPUs are Idle
 ============================================================================
 
 2D arrays
@@ -530,6 +544,21 @@ More 1D array tests
      4000000  15.398    2000 2998.254638671875000    1
      4000000  40.577    2000 2998.254638671875000    2
 
+
+Compare with and without -fopenmp-targets=nvptx64
+-fopenmp -fopenmp-targets=nvptx64
+     1000000   0.200    2000    0.000663466402330    0.000026498402804   -3
+     1000000   0.585    2000    0.000663466402330    0.000026498402804   -2
+     1000000   7.570    2000    0.000663466402330    0.000026498402804   -1
+     1000000   7.566    2000    0.000663466402330    0.000026498402804    0
+-fopenmp
+     1000000   0.802    2000    0.000663466402330    0.000026498402804   -3
+     1000000   7.617    2000    0.000663466402330    0.000026498402804   -2
+     1000000   7.573    2000    0.000663466402330    0.000026498402804   -1
+     1000000   7.573    2000    0.000663466402330    0.000026498402804    0
+
+
+
  */
 /*Note
 In C, arrays of more than one dimension are arranged in storage in row major order, while in Fortran they are arranged in column major order. You need to reference the corresponding element of the other language by reversing the order of the subscripts. For example, in an array of floating point integers, the C declaration would be float [10][20] while the Fortran declaration would be REAL*4(20,10).
@@ -545,3 +574,16 @@ The following two elements also represent the same storage:
 C
 da[4][8]
 */
+
+/*Notes
+With the classic-llvm built I get en error
+ ~/opt/classic-flang-llvm/install/bin/clang benchmark1.c -o benchmark1_cl -L/opt/gcc/11.3.0/lib64  -lm -O3 -fopenmp  -fopenmp-targets=nvptx64
+clang-10: error: cannot find libdevice for sm_35. Provide path to different CUDA installation via --cuda-path, or pass -nocudalib to build without linking with libdevice.
+
+If I specify --cuda-path=/usr/local/cuda-11.7 I get the same error
+
+If I specify --cuda-path=/usr/local/cuda-10.2 the error turns into a warning but the compile crashes
+
+
+
+ */

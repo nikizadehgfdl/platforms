@@ -82,7 +82,7 @@ end subroutine transform_2darray_omp_gpu
 program benchmark1
   implicit none
 
-  integer, parameter :: m=1000,n=1000, iter_max=2000
+  integer, parameter :: m=4000,n=4000, iter_max=2000
   integer :: i, j, iter, itermax
   real, parameter :: pi=2.0*asin(1.0)
   real, dimension (:,:), allocatable :: A, B
@@ -95,7 +95,7 @@ program benchmark1
   write(*,'(a)')  '2D arrays'
   allocate ( A(0:m-1,0:n-1),B(0:m-1,0:n-1) )
   allocate ( y0(0:n-1) )
-  do nthread = -3,16
+  do nthread = -3,3
   A=0.0; B=0.0
   ! Set B.C.
   y0 = sin(pi* (/ (j,j=0,n-1) /) /(n-1))
@@ -133,12 +133,14 @@ end program benchmark1
 
 
 !Some results
-!
+!module load cuda/11.7
+!module load nvhpc-no-mpi/22.5
+!ulimit -s unlimited 
 !pgf90 -mp -Mpreprocess -fast -ta=tesla,cuda11.7,cc60  benchmark1.f90 -o benchmark1_pgf90_omp_gpu ; ./benchmark1_pgf90_omp_gpu
 !   size      time(s) iterations initial_sum          final_sum        omp_nthreads
 !2D arrays
-!   1000000   0.374    2000    0.000663466111291    0.000026498431907   -3
-!   1000000   0.280    2000    0.000663466111291    0.000026498431907   -2
+!   1000000   0.374    2000    0.000663466111291    0.000026498431907   -3 !!!GPUs Idle !!!
+!   1000000   0.280    2000    0.000663466111291    0.000026498431907   -2 !!!GPUs Idle !!!
 !   1000000   4.295    2000    0.000663466111291    0.000026498431907    0
 !   1000000   4.292    2000    0.000663466111291    0.000026498431907    1
 !   1000000   2.245    2000    0.000663466111291    0.000026498431907    2
