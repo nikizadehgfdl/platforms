@@ -1,0 +1,1 @@
+../../datasets/grids/OM4_Baltic/atmos_mosaic.nc

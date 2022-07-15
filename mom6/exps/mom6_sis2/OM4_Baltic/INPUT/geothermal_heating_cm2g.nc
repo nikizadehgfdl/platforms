@@ -1,0 +1,1 @@
+../../datasets/grids/OM4_Baltic/geothermal_heating_cm2g.nc
