@@ -6,3 +6,5 @@
 ./linux-build.bash -m gaea -p pgi18 -t prod-openmp -f mom6sis2
 ./linux-build.bash -m gaea -p gnu7 -t prod -f mom6sis2
 ./linux-build.bash -m gaea -p gnu7 -t prod-openmp -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
+./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
