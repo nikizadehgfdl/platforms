@@ -80,8 +80,11 @@
 ! 100000000   0.000  687.194763183593750****
 !real	0m1.261s
 !user	0m0.491s
-
-
+!
+!DO CONCURRENT with GPU offload (Note -stdpar and comment out $omp target 
+!nvfortran -mp -stdpar  example1.f90 -o example1_nvf_docon ;time ./example1_nvf_docon 
+! size        runtime sum                omp_num_threads
+! 100000000   0.237  687.194763183593750   1
 
 program example1
   implicit none
@@ -97,8 +100,9 @@ program example1
 !$   run_time = omp_get_wtime() 
 !NOacc data copyin(x) copyout(y)
 !NOacc kernels present(x,y)
-!$omp target teams distribute parallel do map(tofrom: x, y)
-  do i=0,N-1
+!Nomp target teams distribute parallel do map(tofrom: x, y)
+!  do i=0,N-1
+  do concurrent(i=0:N-1)
     x(i) = i*1.
     do j=1,1000
       y(i) = y(i)+ 3.*x(i)/N

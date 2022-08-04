@@ -12,6 +12,23 @@ subroutine transform_2darray(nthread, iter_max, m, n, A)
    enddo; enddo
 end subroutine transform_2darray
 
+subroutine transform_2darray_doconcurrent(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+!!$omp target data map(A(0:m-1,0:n-1))
+  do concurrent(j=0:n-1) 
+    do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+    enddo
+  enddo
+!!$omp target end
+end subroutine transform_2darray_doconcurrent
+
 subroutine transform_2darray_omp(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real, dimension(0:m-1,0:n-1), intent(inout) :: A
@@ -95,7 +112,7 @@ program benchmark1
   write(*,'(a)')  '2D arrays'
   allocate ( A(0:m-1,0:n-1),B(0:m-1,0:n-1) )
   allocate ( y0(0:n-1) )
-  do nthread = -3,20
+  do nthread = -4,0
   A=0.0; B=0.0
   ! Set B.C.
   y0 = sin(pi* (/ (j,j=0,n-1) /) /(n-1))
@@ -120,6 +137,7 @@ program benchmark1
       if(nthread == -1) cycle !call transform_2darray_omp_teams(1,iter_max,m,n,A)
       if(nthread == -2) call transform_2darray_omp_gpu(1,iter_max,m,n,A)
       if(nthread == -3) call transform_2darray_omp_gpu_teams(1,iter_max,m,n,A)
+      if(nthread == -4) call transform_2darray_doconcurrent(1,iter_max,m,n,A)
 !$   run_time = omp_get_wtime() - run_time;
 
   write(*,'(i10,f8.3,i8,f21.15,f21.15,i5)')  n*m, run_time,iter_max,sum0,sum(A)/n/m,nthread 
