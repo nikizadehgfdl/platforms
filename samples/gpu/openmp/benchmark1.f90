@@ -174,6 +174,19 @@ end program benchmark1
 !Shouldn't gpu be idle when there is no "$omp target" directive for nthread>=0 above ?
 !How can we ensure that the first two results come from GPU given that numerical values are the same as cpu? Why would they be the same to such accuracy? 
 !
+!Offload with do concurrent is blazing
+!nvfortran -Mpreprocess -mp -stdpar  benchmark1.f90 -o benchmark1_nvf_docon ;time ./benchmark1_nvf_docon
+!   size      time(s) iterations initial_sum          final_sum        omp_nthreads
+!2D arrays
+!  16000000   0.042    2000    0.000165991179529    0.000006629719337   -4
+!  16000000   4.713    2000    0.000165991179529    0.000006629719337   -3
+!  16000000   4.657    2000    0.000165991179529    0.000006629719337   -2
+!  16000000  68.909    2000    0.000165991179529    0.000006629719337    0
+!
+!nvfortran -Mpreprocess -mp -stdpar=gpu -Minfo=stdpar  benchmark1.f90 -o benchmark1_nvf_docon ;time ./benchmark1_nvf_docon
+!
+!Note: we cannot use both -ta and -stdpar !!
+!
 !No offloading, replace -mp=gpu by -mp    
 !nvfortran -Mpreprocess -ta=tesla -mp benchmark1.f90 -o benchmark1_nvf ; time ./benchmark1_nvf
 !   size      time(s) iterations initial_sum          final_sum        omp_nthreads
