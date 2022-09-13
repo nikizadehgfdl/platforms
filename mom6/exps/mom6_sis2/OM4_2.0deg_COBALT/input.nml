@@ -132,3 +132,8 @@
        do_generic_SF6=.false.
        force_update_fluxes=.true.
 /
+ &generic_COBALT_nml
+       co2_calc = 'mocsy'
+       debug = .false.
+/
+

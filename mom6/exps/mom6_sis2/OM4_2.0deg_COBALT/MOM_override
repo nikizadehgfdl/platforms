@@ -12,7 +12,6 @@
 USE_NET_FW_ADJUSTMENT_SIGN_BUG = False
 !Turn on COBALT
 #override USE_generic_tracer = True
-! GENERIC_TRACER_IC_FILE = "_NULL_"
 #override CHL_FROM_FILE = False
 #override DO_GEOTHERMAL = True 
 #override GEOTHERMAL_SCALE = 0.0 

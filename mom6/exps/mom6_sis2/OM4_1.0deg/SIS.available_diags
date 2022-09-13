@@ -106,6 +106,10 @@
 "ice_model", "sitemptop"  [Unused]
     ! long_name: surface temperature
     ! units: C
+"ice_model", "sitemptop_CMOR"  [Unused]
+    ! long_name: Surface Temperature of Sea ice
+    ! units: Kelvin
+    ! standard_name: SeaIceSurfaceTemperature
 "ice_model", "SLP"  [Unused]
     ! long_name: sea level pressure
     ! units: Pa
@@ -193,6 +197,12 @@
 "ice_model", "FW_Y"  [Unused]
     ! long_name: water stress on ice - y component
     ! units: Pa
+"ice_model", "FLF_X"  [Unused]
+    ! long_name: land-fast bottom stress on ice - x component
+    ! units: Pa
+"ice_model", "FLF_Y"  [Unused]
+    ! long_name: land-fast bottom stress on ice - y component
+    ! units: Pa
 "ice_model", "UI"  [Unused]
     ! long_name: ice velocity - x component
     ! units: m/s
@@ -234,13 +244,13 @@
     ! units: Pa
 "ice_model", "str_d"  [Unused]
     ! long_name: ice divergence internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "str_t"  [Unused]
     ! long_name: ice tension internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "str_s"  [Unused]
     ! long_name: ice shearing internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "sh_d"  [Unused]
     ! long_name: ice divergence strain rate
     ! units: s-1
@@ -264,13 +274,13 @@
     ! units: m/s
 "ice_model", "str_d_hf"  [Unused]
     ! long_name: ice divergence internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "str_t_hf"  [Unused]
     ! long_name: ice tension internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "str_s_hf"  [Unused]
     ! long_name: ice shearing internal stress
-    ! units: Pa
+    ! units: Pa m
 "ice_model", "sh_d_hf"  [Unused]
     ! long_name: ice divergence rate
     ! units: s-1
@@ -343,15 +353,26 @@
 "ice_model", "siconc"  [Unused]
     ! long_name: ice concentration
     ! units: 0-1
+"ice_model", "siconc_CMOR"  [Unused]
+    ! long_name: Sea-Ice Area Percentage
+    ! units: %
+    ! standard_name: SeaIceAreaFraction
 "ice_model", "sithick"  [Unused]
     ! long_name: ice thickness
     ! units: m-ice
 "ice_model", "sivol"  [Unused]
     ! long_name: ice volume
     ! units: m-ice
+"ice_model", "sivol_CMOR"  [Unused]
+    ! long_name: Sea-ice Volume per Area
+    ! units: m-ice
 "ice_model", "sisnconc"  [Unused]
     ! long_name: snow concentration
     ! units: 0-1
+"ice_model", "sisnconc_CMOR"  [Unused]
+    ! long_name: Snow Area Percentage
+    ! units: %
+    ! standard_name: SurfaceSnowAreaFraction
 "ice_model", "sisnthick"  [Unused]
     ! long_name: snow thickness
     ! units: m-snow
@@ -389,6 +410,9 @@
     ! long_name: ice + snow mass
     ! units: kg/m^2
 "ice_model", "simass"  [Unused]
+    ! long_name: ice mass
+    ! units: kg/m^2
+"ice_model", "simass_n"  [Unused]
     ! long_name: ice mass
     ! units: kg/m^2
 "ice_model", "sisnmass"  [Unused]

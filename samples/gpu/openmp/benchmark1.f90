@@ -29,6 +29,168 @@ subroutine transform_2darray_doconcurrent(nthread, iter_max, m, n, A)
 !!$omp target end
 end subroutine transform_2darray_doconcurrent
 
+subroutine transform_2darray_acc(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+  integer :: dev,j1,j2,num_devices
+  real    :: sum
+
+
+!  num_devices = acc_get_num_devices()
+!  print*, 'Number of available devices= ',num_devices
+!  dev = acc_get_device_num() !hangs
+!  print*, 'GPU device being used= ',dev
+  
+
+!$ACC set device_num(1)
+
+!  dev = acc_get_device_num()
+!  print*, 'GPU device being used= ',dev
+
+!$ACC kernels
+do j=0,n-1 
+   do i=0,m-1
+      iter=0
+      do while (iter < iter_max)
+         A(i,j) = A(i,j)*(A(i,j)-1.0)
+         iter = iter+1
+      enddo
+   enddo
+enddo
+
+!Modify the array on the device
+!A(1,1) = -10.0 !This cause a copyout(a(1,1)), why?
+do i=1,1
+   A(i,i)= -10.0 !This does not cause a copyout(a(1,1)), but slows down
+enddo
+
+!Who is doing this calculation here?
+!  When inside acc kernels it is done/parallelized-reduced on the device
+sum=0.0
+do j=0,n-1;do i=0,m-1
+   sum=sum+A(i,j)
+enddo;enddo
+print*,'inside  acc kernels',sum/n/m  !, A(1,1)
+
+!$ACC end kernels
+
+sum=0.0
+do j=0,n-1;do i=0,m-1
+   sum=sum+A(i,j)
+enddo;enddo
+print*,'outside acc kernels',sum/n/m, A(1,1)
+
+!size         time(s) iterations initial_sum          final_sum
+!1600000000  14.438   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia
+!1600000000  11.857   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia:managed
+!1600000000  12.393   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia:managed i=1,1 loop
+!Note: The following difference is because the inside calculation is done by GPU the outside by GPU
+! inside  acc kernels   2.2788208E-07   -10.00000    
+! outside acc kernels   2.2784094E-07   -10.00000     
+end subroutine transform_2darray_acc
+
+subroutine transform_2darray_acc_data(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+  integer :: dev,j1,j2,num_devices
+  real    :: sum
+
+
+!  num_devices = acc_get_num_devices()
+!  print*, 'Number of available devices= ',num_devices
+!  dev = acc_get_device_num() !hangs
+!  print*, 'GPU device being used= ',dev
+  
+
+!$ACC set device_num(1)
+
+!  dev = acc_get_device_num()
+!  print*, 'GPU device being used= ',dev
+
+!!$ACC kernels
+!$ACC data copy(A)
+!$ACC parallel loop collapse(2)
+do j=0,n-1 
+   do i=0,m-1
+      iter=0
+      do while (iter < iter_max)
+         A(i,j) = A(i,j)*(A(i,j)-1.0)
+         iter = iter+1
+      enddo
+   enddo
+enddo
+
+!Modify the array on the device
+!A(1,1) = -10.0 !This does not work inside a acc data region
+
+!Who is doing this calculation here?
+!  When inside acc data it is done on host and needs a 
+!$ACC update host(A)
+!  When inside acc kernels it is done/parallelized-reduced on the device
+sum=0.0
+do j=0,n-1;do i=0,m-1
+   sum=sum+A(i,j)
+enddo;enddo
+print*,'inside  acc data',sum/n/m, A(1,1)
+
+!$ACC end data
+!!$ACC end kernels
+
+sum=0.0
+do j=0,n-1;do i=0,m-1
+   sum=sum+A(i,j)
+enddo;enddo
+print*,'outside acc data',sum/n/m, A(1,1)
+
+!size         time(s) iterations initial_sum          final_sum
+!1600000000  14.088   20000    0.000016602447431    0.000000234099261   -4  without collapse(2)
+!1600000000  14.105   20000    0.000016602447431    0.000000234099261   -4  with collapse(2)
+!1600000000  13.995   20000    0.000016602447431    0.000000234099261   -4  kernels
+end subroutine transform_2darray_acc_data
+
+subroutine transform_2darray_acc_omp(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+  integer :: dev,j1,j2
+  real    :: sum
+
+!$ACC data copy(A)
+!$omp parallel do private(dev,j1,j2,iter,i,j) shared(A,iter_max,m,n)
+do dev=0,1
+!  j1=0;j2=n-1
+  if(dev==0) then
+     j1=0;j2=n/2
+  endif   
+  if(dev==1) then
+     j1=n/2+1; j2=n-1
+  endif
+
+!$ACC set device_num(dev)
+!$ACC parallel loop
+  do j=j1,j2 
+    do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+    enddo
+  enddo
+enddo
+
+!$ACC end data
+
+
+!size         time(s) iterations initial_sum          final_sum
+!1600000000   9.619   20000    0.000016602447431    0.000000234099261   -4   for dev=0 or 1
+!1600000000  10.126   20000    0.000016602447431    0.000000234099261   -4   do dev=0,1 without openmp
+!1600000000   5.277   20000    0.000016602447431    0.000000234099261   -4   do dev=0,1 with openmp   Yey,it works
+
+end subroutine transform_2darray_acc_omp
+
 subroutine transform_2darray_omp(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real, dimension(0:m-1,0:n-1), intent(inout) :: A
@@ -64,12 +226,37 @@ subroutine transform_2darray_omp_teams(nthread, iter_max, m, n, A)
    enddo; enddo
 end subroutine transform_2darray_omp_teams
 
+subroutine transform_2darray_omp_gpu_teams_blocks(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+  integer :: dev,j1,j2
+
+!$omp parallel do private(dev,j1,j2,iter,i,j) shared(A,iter_max,m,n)
+do dev=0,1
+  if(dev==0) then
+     j1=0;j2=n/2
+  endif   
+  if(dev==1) then
+     j1=n/2+1; j2=n-1
+  endif
+!$omp target teams distribute parallel do map(tofrom: A(0:m-1,j1:j2)) device(dev)
+  do j=j1,j2;do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+   enddo; enddo
+enddo
+end subroutine transform_2darray_omp_gpu_teams_blocks
+
 subroutine transform_2darray_omp_gpu_teams(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real, dimension(0:m-1,0:n-1), intent(inout) :: A
   integer :: iter
 
-!$omp target teams distribute parallel do map(tofrom: A(0:m-1,0:n-1),iter)
+!$omp target teams distribute parallel do map(tofrom: A(0:m-1,0:n-1))
   do j=0,n-1;do i=0,m-1
      iter=0
      do while (iter < iter_max)
@@ -99,7 +286,7 @@ end subroutine transform_2darray_omp_gpu
 program benchmark1
   implicit none
 
-  integer, parameter :: m=4000,n=4000, iter_max=2000
+  integer, parameter :: m=40000,n=40000, iter_max=20000
   integer :: i, j, iter, itermax
   real, parameter :: pi=2.0*asin(1.0)
   real, dimension (:,:), allocatable :: A, B
@@ -112,7 +299,7 @@ program benchmark1
   write(*,'(a)')  '2D arrays'
   allocate ( A(0:m-1,0:n-1),B(0:m-1,0:n-1) )
   allocate ( y0(0:n-1) )
-  do nthread = -4,0
+  do nthread = -4,-4
   A=0.0; B=0.0
   ! Set B.C.
   y0 = sin(pi* (/ (j,j=0,n-1) /) /(n-1))
@@ -137,10 +324,12 @@ program benchmark1
       if(nthread == -1) cycle !call transform_2darray_omp_teams(1,iter_max,m,n,A)
       if(nthread == -2) call transform_2darray_omp_gpu(1,iter_max,m,n,A)
       if(nthread == -3) call transform_2darray_omp_gpu_teams(1,iter_max,m,n,A)
-      if(nthread == -4) call transform_2darray_doconcurrent(1,iter_max,m,n,A)
+      if(nthread == -4) call transform_2darray_acc(1,iter_max,m,n,A)
+      if(nthread == -5) call transform_2darray_omp_gpu_teams_blocks(1,iter_max,m,n,A)
+      if(nthread == -6) call transform_2darray_doconcurrent(1,iter_max,m,n,A)
 !$   run_time = omp_get_wtime() - run_time;
 
-  write(*,'(i10,f8.3,i8,f21.15,f21.15,i5)')  n*m, run_time,iter_max,sum0,sum(A)/n/m,nthread 
+  write(*,'(i14,f8.3,i8,f21.15,f21.15,i5)')  n*m, run_time,iter_max,sum0,sum(A)/n/m,nthread 
 
   enddo
 
@@ -281,8 +470,14 @@ end program benchmark1
 !
 !Note the timings get to the same level of -ta=tesla, but the answers deterirate a little.
 !
-!
-!
+!openACC
+!nvfortran -mp -acc -ta=nvidia:managed -Minfo=accel  benchmark1.f90 -o benchmark1_nvf_acc ;time ./benchmark1_nvf_acc
+!   size      time(s) iterations initial_sum          final_sum        omp_nthreads
+!2D arrays
+!   16000000   0.030    2000    0.000165991179529    0.000006629719337   -4
+!   16000000  68.760    2000    0.000165991179529    0.000006629719337   -3
+!   16000000  68.692    2000    0.000165991179529    0.000006629719337   -2
+
 !flang compiler
 !No gpu offloading.
 !~/opt/llvm/install/bin/flang benchmark1.f90 -o benchmark1_flang  -O3 -fopenmp; ./benchmark1_flang
