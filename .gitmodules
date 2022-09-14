@@ -6,7 +6,7 @@
 	url = https://github.com/NOAA-GFDL/SIS2.git
 [submodule "mom6/src/FMS"]
 	path = mom6/src/FMS
-	url = https://github.com/NOAA-GFDL/FMS.git
+	url = https://github.com/nikizadehgfdl/FMS.git
 [submodule "mom6/src/atmos_null"]
 	path = mom6/src/atmos_null
 	url = https://github.com/NOAA-GFDL/atmos_null.git
