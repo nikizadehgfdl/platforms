@@ -24,6 +24,7 @@ ln -s OM4_1deg_20191121 OM4_1_gridgen
 
 wget ftp://ftp.gfdl.noaa.gov/pub/Niki.Zadeh/OM4_datasets/OM4_Baltic.tar.gz
 tar zxvf OM4_Baltic.tar.gz
+cd ..
 
 wget ftp://ftp.gfdl.noaa.gov/pub/Niki.Zadeh/OM4_datasets/OceanBGC_dataset.tar.gz
 mkdir OceanBGC_dataset ; cd OceanBGC_dataset

@@ -1,0 +1,1 @@
+source ../../../builds/lscgpu50/nvhpc22.5.env ; mpirun -n 2 ../../../builds/build/lscgpu50-nvhpc22.5/ocean_ice/prod.DC/MOM6SIS2  |& tee  stdout.lscgpu50-nvhpc22.5.prod.DC.n2
