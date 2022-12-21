@@ -85,7 +85,7 @@ print*,'outside acc kernels',sum/n/m, A(1,1)
 !1600000000  14.438   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia
 !1600000000  11.857   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia:managed
 !1600000000  12.393   20000    0.000016602447431    0.000000227840943   -4   Kernels with -ta=nvidia:managed i=1,1 loop
-!Note: The following difference is because the inside calculation is done by GPU the outside by GPU
+!Note: The following difference is because the inside calculation is done by GPU the outside by CPU
 ! inside  acc kernels   2.2788208E-07   -10.00000    
 ! outside acc kernels   2.2784094E-07   -10.00000     
 end subroutine transform_2darray_acc
@@ -299,7 +299,7 @@ program benchmark1
   write(*,'(a)')  '2D arrays'
   allocate ( A(0:m-1,0:n-1),B(0:m-1,0:n-1) )
   allocate ( y0(0:n-1) )
-  do nthread = -4,-4
+  do nthread = -3,3
   A=0.0; B=0.0
   ! Set B.C.
   y0 = sin(pi* (/ (j,j=0,n-1) /) /(n-1))
@@ -340,7 +340,7 @@ end program benchmark1
 
 
 !Some results
-!
+!bash
 !module load cuda/11.7
 !module load nvhpc-no-mpi/22.5
 !ulimit -s unlimited 
