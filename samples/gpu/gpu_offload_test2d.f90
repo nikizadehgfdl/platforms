@@ -5,7 +5,7 @@
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=30000,n=30000, iter_max=2000
+  integer, parameter :: m=10000,n=10000, iter_max=2000
   integer :: i, j, iter, itermax
   real, parameter :: pi=2.0*asin(1.0)
   real, parameter :: tol=1e-10
@@ -43,21 +43,22 @@ program test_omp
 
   write(*,'(a)')  '      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine'
 
+!The cpu openmp will be too slow (1000x) for large size arrays.
 !  A2(:,:)=A(:,:)
 !  nthread=1
 !!$   run_time = omp_get_wtime()
-!   call benchmark2d0(nthread, iter_max, m, n, A2)
-!   subname='benchmark2d0'
+!   call benchmark2d_omp(nthread, iter_max, m, n, A2)
+!   subname='benchmark2d_omp'
 !!$   run_time = omp_get_wtime() - run_time;
 !   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
-!   A2(:,:)=A(:,:)
-!!$   run_time = omp_get_wtime()
-!   nthread=1 
-!   call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
-!   subname='benchmark2d_omp_gpu'
-!!$   run_time = omp_get_wtime() - run_time;
-!   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -191,6 +192,14 @@ end subroutine benchmark2d_docon
 !      16000000     6.218     200    0.000165991063113    0.000015737357899    1      benchmark2d0                                      
 !      16000000     0.023     200    0.000165991063113    0.000015737357899    1      benchmark2d_omp_gpu                               
 !      16000000     0.024     200    0.000165991063113    0.000015737357899    1      benchmark2d_docon  
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
+!     100000000     0.245    2000    0.000066406464612    0.000002652284593    1      benchmark2d_omp_gpu                               
+!     100000000     0.144    2000    0.000066406464612    0.000002652284593    1      benchmark2d_docon  
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
+!     400000000     0.822    2000    0.000033204873034    0.000001326215056    1      benchmark2d_omp_gpu                               
+!     400000000     0.430    2000    0.000033204873034    0.000001326215056    1      benchmark2d_docon                                 
 !x100
 !Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine

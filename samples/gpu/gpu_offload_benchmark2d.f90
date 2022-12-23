@@ -198,13 +198,14 @@ end subroutine benchmark2d_acc_2dev
 
 program benchmark1_driver
   implicit none
-  integer, parameter :: m=40000,n=40000, iter_max=2000
+  integer, parameter :: m=10000,n=10000, iter_max=2000
   integer :: i, j, iter, itermax
   real*8, parameter :: pi=2.0*asin(1.0)
   real*8, parameter :: tol=1e-10
   real*8, dimension (:,:), allocatable :: A, B,A2
   real*8, dimension (:),  allocatable :: y0
   real*8 :: sum0
+  real*8 :: res   =0.000002652284758
   real*8 :: res1  =0.000006629710014
   real*8 :: res100=0.000000663121053
   real*8 :: run_time, omp_get_wtime
@@ -277,7 +278,7 @@ program benchmark1_driver
 !$   run_time = omp_get_wtime() - run_time;
 
       write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m, run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-      if(dabs(sum(A2)/n/m-res100) .gt. tol) print*,'Wrong Result!!!!'
+      if(dabs(sum(A2)/n/m-res) .gt. tol) print*,'Wrong Result!!!!'
 !   enddo
    deallocate (A, B, y0, A2)
 end program benchmark1_driver
