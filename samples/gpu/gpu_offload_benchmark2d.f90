@@ -17,7 +17,7 @@ subroutine benchmark2d_omp(nthread, iter_max, m, n, A)
   integer :: iter
 !$ call omp_set_dynamic(0);
 !$ call omp_set_num_threads(nthread);
-!$omp parallel do collapse(2)
+!$omp parallel do collapse(2) private(iter)
   do j=0,n-1;do i=0,m-1
      iter=0
      do while (iter < iter_max)
