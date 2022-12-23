@@ -5,7 +5,7 @@
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=4000,n=4000, iter_max=200
+  integer, parameter :: m=40000,n=40000, iter_max=2000
   integer :: i, j, iter, itermax
   real, parameter :: pi=2.0*asin(1.0)
   real, parameter :: tol=1e-10
@@ -43,13 +43,13 @@ program test_omp
 
   write(*,'(a)')  '      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine'
 
-  A2(:,:)=A(:,:)
-  nthread=1
-!$   run_time = omp_get_wtime()
-   call benchmark2d0(nthread, iter_max, m, n, A2)
-   subname='benchmark2d0'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+!  A2(:,:)=A(:,:)
+!  nthread=1
+!!$   run_time = omp_get_wtime()
+!   call benchmark2d0(nthread, iter_max, m, n, A2)
+!   subname='benchmark2d0'
+!!$   run_time = omp_get_wtime() - run_time;
+!   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -151,7 +151,7 @@ subroutine benchmark2d_docon(nthread, iter_max, m, n, A)
 end subroutine benchmark2d_docon
 
 !Some results
-!On Intel devcloud platform
+!On Intel devcloud platform on 12/22/2022
 !-O0
 !u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
@@ -165,3 +165,20 @@ end subroutine benchmark2d_docon
 !      16000000     0.727     200    0.000165990830283    0.000015737356080    1     benchmark2d_omp_gpu
 !      16000000     0.069     200    0.000165990830283    0.000015737356080    1     benchmark2d_docon        
 !
+!On gfdl gpubox on 12/22/2022
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
+!      16000000     6.226     200    0.000165991179529    0.000015737370632    1     benchmark2d0                                      
+!      16000000     0.024     200    0.000165991179529    0.000015737370632    1     benchmark2d_omp_gpu                               
+!      16000000     0.024     200    0.000165991179529    0.000015737370632    1     benchmark2d_docon        
+!-O2
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
+!      16000000     6.218     200    0.000165991063113    0.000015737357899    1      benchmark2d0                                      
+!      16000000     0.023     200    0.000165991063113    0.000015737357899    1      benchmark2d_omp_gpu                               
+!      16000000     0.024     200    0.000165991063113    0.000015737357899    1      benchmark2d_docon  
+!x100
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
+!    1600000000     3.203    2000    0.000016602891264    0.000000663109006    1      benchmark2d_omp_gpu                               
+!    1600000000     1.919    2000    0.000016602891264    0.000000663109006    1      benchmark2d_docon   
