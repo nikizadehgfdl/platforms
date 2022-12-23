@@ -1,7 +1,6 @@
 !This is a quick test for openmp
 !To compile and run do:
-!\rm ./test_omp; nvfortran -mp test_omp.f90 -o test_omp; ./test_omp 
-!\rm ./test_omp_ifx; ifx -g -fpp -qopenmp test_omp.f90 -o test_omp_ifx;./test_omp_ifx
+!\rm ./test_omp_gpu; nvfortran -mp=gpu test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
 program test_omp
   implicit none
   include 'omp_lib.h'        
@@ -130,6 +129,14 @@ program test_omp
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+
 
    deallocate (A, B, y0, A2)
 end program test_omp
@@ -185,4 +192,18 @@ subroutine benchmark2d0(nthread, iter_max, m, n, A)
    enddo; enddo
 end subroutine benchmark2d0
 
+subroutine benchmark2d_omp_gpu(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+
+!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1),iter)
+  do j=0,n-1;do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+   enddo; enddo
+end subroutine benchmark2d_omp_gpu
 
