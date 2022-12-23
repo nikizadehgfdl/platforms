@@ -1,7 +1,7 @@
 !This is a quick test for openmp
 !To compile and run do:
-!\rm ./test_omp_gpu; nvfortran -mp=gpu test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
-!\rm ./test_omp_gpu; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!\rm ./gpu_offload_test2d; nvfortran -mp=gpu gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
+!\rm ./gpu_offload_test2d; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 program test_omp
   implicit none
   include 'omp_lib.h'        
@@ -154,26 +154,26 @@ end subroutine benchmark2d_docon
 !Some results
 !On Intel devcloud platform on 12/22/2022
 !-O0
-!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./gpu_offload_test2d; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !      16000000     8.940     200    0.000165991194081    0.000015737372451    1     benchmark2d0
 !      16000000     4.999     200    0.000165991194081    0.000015737372451    1     benchmark2d_omp_gpu
 !      16000000     1.165     200    0.000165991194081    0.000015737372451    1     benchmark2d_docon
 !-O2
-!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./gpu_offload_test2d; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !      16000000     4.244     200    0.000165990830283    0.000015737356080    1     benchmark2d0
 !      16000000     0.727     200    0.000165990830283    0.000015737356080    1     benchmark2d_omp_gpu
 !      16000000     0.069     200    0.000165990830283    0.000015737356080    1     benchmark2d_docon        
-!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./gpu_offload_test2d; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !      16000000     1.355    2000    0.000165990830283    0.000006629713880    1     benchmark2d_omp_gpu
 !      16000000     0.502    2000    0.000165990830283    0.000006629713880    1     benchmark2d_docon
-!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./gpu_offload_test2d; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !     100000000     4.387    2000    0.000066406377300    0.000002652283911    1     benchmark2d_omp_gpu
 !     100000000     3.140    2000    0.000066406377300    0.000002652283911    1     benchmark2d_docon
-!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./gpu_offload_test2d; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !     400000000    14.626    2000    0.000033204814827    0.000001326215852    1     benchmark2d_omp_gpu
 !     400000000    12.551    2000    0.000033204814827    0.000001326215852    1     benchmark2d_docon   
@@ -181,27 +181,27 @@ end subroutine benchmark2d_docon
 !     16000000 bombs
 !
 !On gfdl gpubox on 12/22/2022
-!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !      16000000     6.226     200    0.000165991179529    0.000015737370632    1     benchmark2d0                                      
 !      16000000     0.024     200    0.000165991179529    0.000015737370632    1     benchmark2d_omp_gpu                               
 !      16000000     0.024     200    0.000165991179529    0.000015737370632    1     benchmark2d_docon        
 !-O2
-!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -O2 -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
 !      16000000     6.218     200    0.000165991063113    0.000015737357899    1      benchmark2d0                                      
 !      16000000     0.023     200    0.000165991063113    0.000015737357899    1      benchmark2d_omp_gpu                               
 !      16000000     0.024     200    0.000165991063113    0.000015737357899    1      benchmark2d_docon  
-!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -O2 -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
 !     100000000     0.245    2000    0.000066406464612    0.000002652284593    1      benchmark2d_omp_gpu                               
 !     100000000     0.144    2000    0.000066406464612    0.000002652284593    1      benchmark2d_docon  
-!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -O2 -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
 !     400000000     0.822    2000    0.000033204873034    0.000001326215056    1      benchmark2d_omp_gpu                               
 !     400000000     0.430    2000    0.000033204873034    0.000001326215056    1      benchmark2d_docon                                 
 !x100
-!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./test_omp_gpu; nvfortran -O2 -mp=gpu -stdpar test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -O2 -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads     subroutine
 !    1600000000     3.203    2000    0.000016602891264    0.000000663109006    1      benchmark2d_omp_gpu                               
 !    1600000000     1.919    2000    0.000016602891264    0.000000663109006    1      benchmark2d_docon   
