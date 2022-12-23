@@ -1,10 +1,11 @@
 !This is a quick test for openmp
 !To compile and run do:
 !\rm ./test_omp_gpu; nvfortran -mp=gpu test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!\rm ./test_omp_gpu; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=400,n=400, iter_max=20
+  integer, parameter :: m=4000,n=4000, iter_max=200
   integer :: i, j, iter, itermax
   real, parameter :: pi=2.0*asin(1.0)
   real, parameter :: tol=1e-10
@@ -43,89 +44,10 @@ program test_omp
   write(*,'(a)')  '      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine'
 
   A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime() 
-  do j=0,n-1;do i=0,m-1
-     iter=0
-     do while (iter < iter_max)
-        A2(i,j) = A2(i,j)*(A2(i,j)-1.0)
-        iter = iter+1
-     enddo
-   enddo; enddo
-   subname='benchmark2d_inline'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-  A2(:,:)=A(:,:)
-  nthread=1
-!$   run_time = omp_get_wtime() 
-!$   call omp_set_dynamic(.FALSE.)
-!$   call omp_set_num_threads(nthread)
-!$omp parallel 
-!$  nthr = OMP_GET_NUM_THREADS();print *, ' We are using',nthr,' thread(s)'
-!$omp do private(iter)
-  do j=0,n-1;do i=0,m-1
-     iter=0
-     do while (iter < iter_max)
-        A2(i,j) = A2(i,j)*(A2(i,j)-1.0)
-        iter = iter+1
-     enddo
-   enddo; enddo
-!$omp end do
-!$omp end parallel
-   subname='benchmark2d_omp_inline'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-  A2(:,:)=A(:,:)
-  nthread=2
-!$   run_time = omp_get_wtime() 
-!$   call omp_set_dynamic(.FALSE.)
-!$   call omp_set_num_threads(nthread)
-!$omp parallel 
-!$  nthr = OMP_GET_NUM_THREADS();print *, ' We are using',nthr,' thread(s)'
-!$omp do private(iter)
-  do j=0,n-1;do i=0,m-1
-     iter=0
-     do while (iter < iter_max)
-        A2(i,j) = A2(i,j)*(A2(i,j)-1.0)
-        iter = iter+1
-     enddo
-   enddo; enddo
-!$omp end do
-!$omp end parallel
-   subname='benchmark2d_omp_inline'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-  A2(:,:)=A(:,:)
   nthread=1
 !$   run_time = omp_get_wtime()
    call benchmark2d0(nthread, iter_max, m, n, A2)
    subname='benchmark2d0'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-  A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=1 
-   call benchmark2d_omp0(nthread, iter_max, m, n, A2)
-   subname='benchmark2d_omp0'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-  A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=2 
-   call benchmark2d_omp0(nthread, iter_max, m, n, A2)
-   subname='benchmark2d_omp0'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
-
-   A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=4 
-   call benchmark2d_omp(nthread, iter_max, m, n, A2)
-   subname='benchmark2d_omp'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
@@ -134,6 +56,14 @@ program test_omp
    nthread=1 
    call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d_docon(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
 
@@ -197,7 +127,7 @@ subroutine benchmark2d_omp_gpu(nthread, iter_max, m, n, A)
   real, dimension(0:m-1,0:n-1), intent(inout) :: A
   integer :: iter
 
-!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1),iter)
+!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) private(iter)
   do j=0,n-1;do i=0,m-1
      iter=0
      do while (iter < iter_max)
@@ -207,3 +137,31 @@ subroutine benchmark2d_omp_gpu(nthread, iter_max, m, n, A)
    enddo; enddo
 end subroutine benchmark2d_omp_gpu
 
+subroutine benchmark2d_docon(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+  do concurrent(j=0:n-1,i=0:m-1)
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+  enddo
+end subroutine benchmark2d_docon
+
+!Some results
+!On Intel devcloud platform
+!-O0
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
+!      16000000     8.940     200    0.000165991194081    0.000015737372451    1     benchmark2d0
+!      16000000     4.999     200    0.000165991194081    0.000015737372451    1     benchmark2d_omp_gpu
+!      16000000     1.165     200    0.000165991194081    0.000015737372451    1     benchmark2d_docon
+!-O2
+!u182325@s019-n007:~/platforms/samples/gpu/openmp$ \rm ./test_omp_gpu; ifx -O2 -g -qopenmp -fopenmp-target-do-concurrent -fopenmp-targets=spir64 test_omp_gpu.f90 -o test_omp_gpu;./test_omp_gpu
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
+!      16000000     4.244     200    0.000165990830283    0.000015737356080    1     benchmark2d0
+!      16000000     0.727     200    0.000165990830283    0.000015737356080    1     benchmark2d_omp_gpu
+!      16000000     0.069     200    0.000165990830283    0.000015737356080    1     benchmark2d_docon        
+!
