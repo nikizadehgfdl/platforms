@@ -23,8 +23,9 @@ FPPFLAGS := -fpp -Wp,-w
 
 FFLAGS := -fno-alias -stack-temps -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -sox -traceback
 #FFLAGS += $(shell pkg-config --cflags-only-I mpich)
-FFLAGS += -I/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/mpich/3.3.2-q57iqgnqj6alwpkw62cit74bsxvgj6qz/include
 #FFLAGS += $(shell nc-config --fflags)
+#The above pkg-config give wrong (gcc) directories. 
+FFLAGS += -I/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/mpich/3.3.2-q57iqgnqj6alwpkw62cit74bsxvgj6qz/include
 FFLAGS += -I/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/netcdf-fortran/4.5.2-sev5gt5635s5mfwbosxk6grqm6ygwcd2/include
 FFLAGS_OPT = -O2
 FFLAGS_REPRO = -fltconsistency
@@ -86,12 +87,13 @@ endif
 #LIBS := $(shell pkg-config --libs-only-L netcdf) $(shell pkg-config --libs-only-L netcdf-fortran) $(shell pkg-config --libs-only-L mpich)
 #LIBS += -lnetcdff -lnetcdf -lz  -lmpich -lfmpich
 
-LIBS := $(shell pkg-config --libs-only-L netcdf) $(shell pkg-config --libs-only-L netcdf-fortran)
-LIBS += $(shell pkg-config --libs-only-L mpich)
-LDFLAGS += $(LIBS)
-#LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/netcdf-c/4.7.3-raqekixkujrni2xzdz4da3nxfkjot7gy/lib
-#LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/netcdf-fortran/4.5.2-sev5gt5635s5mfwbosxk6grqm6ygwcd2/lib
-#LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/mpich/3.3.2-q57iqgnqj6alwpkw62cit74bsxvgj6qz/lib
+#LIBS := $(shell pkg-config --libs-only-L netcdf) $(shell pkg-config --libs-only-L netcdf-fortran)
+#LIBS += $(shell pkg-config --libs-only-L mpich)
+#LDFLAGS += $(LIBS)
+#The above pkg-config give wrong (gcc) directories. 
+LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/netcdf-c/4.7.3-raqekixkujrni2xzdz4da3nxfkjot7gy/lib
+LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/netcdf-fortran/4.5.2-sev5gt5635s5mfwbosxk6grqm6ygwcd2/lib
+LDFLAGS += -L/app/spack/v0.15/linux-rhel7-x86_64/intel-19.0.5/mpich/3.3.2-q57iqgnqj6alwpkw62cit74bsxvgj6qz/lib
 LDFLAGS += -lnetcdff -lnetcdf -lz
 LDFLAGS += -lmpich -lfmpich
 LDFLAGS += -L/net2/nnz/opt/miniconda/envs/py3/lib -lpython3.9 -lstdc++
