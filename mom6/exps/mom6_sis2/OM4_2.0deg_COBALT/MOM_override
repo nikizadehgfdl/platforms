@@ -1,5 +1,9 @@
 ! Blank file in which we can put "overrides" for parameters
 !VERBOSITY = 9
+#override OCEAN_OMP_THREADS = 1
+!Turn on COBALT
+#override USE_generic_tracer = True
+#override CHL_FROM_FILE = False
 #override NIGLOBAL = 180                 !
 #override NJGLOBAL = 144                 !
 #override CHANNEL_CONFIG = "none"
@@ -10,9 +14,6 @@
 #override SALT_RESTORE_FILE = "salt_restore.nc"
 # Fix sign error in adjustment of net fresh-water
 USE_NET_FW_ADJUSTMENT_SIGN_BUG = False
-!Turn on COBALT
-#override USE_generic_tracer = True
-#override CHL_FROM_FILE = False
 #override DO_GEOTHERMAL = True 
 #override GEOTHERMAL_SCALE = 0.0 
 ! GEOTHERMAL_FILE = "geothermal_davies2013_v1.nc"

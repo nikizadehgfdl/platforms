@@ -39,6 +39,7 @@
             concurrent = .false.     
             use_lag_fluxes=.false.    
             check_stocks = 0
+ocean_nthreads = 4
 /
 
  &diag_manager_nml
@@ -126,14 +127,15 @@
 
  &generic_tracer_nml
        do_generic_tracer=.true.
+       do_generic_COBALT=.true.
        do_generic_abiotic=.false.
        do_generic_CFC=.false.
-       do_generic_COBALT=.true.
        do_generic_SF6=.false.
        force_update_fluxes=.true.
 /
  &generic_COBALT_nml
        co2_calc = 'mocsy'
        debug = .false.
+nthreads = 1
 /
 

@@ -1,1 +1,3 @@
 source ../../../builds/lscgpu50/nvhpc22.5.env ; mpirun -n 2 ../../../builds/build/lscgpu50-nvhpc22.5/ocean_ice/prod.DC/MOM6SIS2  |& tee  stdout.lscgpu50-nvhpc22.5.prod.DC.n2
+source ../../../builds/lscgpu50/gnu11.env ; mpirun -n 2 ../../../builds/build/lscgpu50-gnu11/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscgpu50-gnu11.repro.n2.master
+source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230410
