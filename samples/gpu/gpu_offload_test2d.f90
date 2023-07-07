@@ -11,7 +11,7 @@
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=10000,n=10000, iter_max=2000
+  integer, parameter :: m=1000,n=1000, iter_max=2000
   integer :: i, j, iter, itermax
   real*8, parameter :: pi=2.0*asin(1.0)
   real*8, parameter :: tol=1e-10
@@ -41,14 +41,14 @@ program test_omp
   write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)'
 
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
-if(.false.) then !The cpu openmp will be too slow (1000x) for large size arrays.
+if(.true.) then !The cpu openmp will be too slow (1000x) for large size arrays.
   A2(:,:)=A(:,:)
   nthread=1
 !$   run_time = omp_get_wtime()
    call benchmark2d_omp(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
   A2(:,:)=A(:,:)
   nthread=2
@@ -56,7 +56,7 @@ if(.false.) then !The cpu openmp will be too slow (1000x) for large size arrays.
    call benchmark2d_omp(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 endif 
 
    A2(:,:)=A(:,:)
@@ -65,7 +65,7 @@ endif
    call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -73,7 +73,7 @@ endif
    call benchmark2d_omp_gpu_subij(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu_subij'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -81,20 +81,27 @@ endif
    call benchmark2d_docon(nthread, iter_max, m, n, A2)
    subname='benchmark2d_docon'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
 !!!!!2d average subs
   write(*,'(a)')  '     non-vectorizable subroutine Aij=(Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4'
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
 
-if(.false.) then !The cpu will be too slow (1000x) for large size arrays. Avoid this test unless you really want to.
+if(.true.) then !The cpu will be too slow (1000x) for large size arrays. Avoid this test unless you really want to.
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
    call benchmark2d2_omp_cpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=2 
+   call benchmark2d2_omp_cpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_cpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 endif
 
    A2(:,:)=A(:,:)
@@ -103,7 +110,7 @@ endif
    call benchmark2d2_omp_gpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_omp_gpu'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -111,7 +118,7 @@ endif
    call benchmark2d2_docon(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_docon'
 !$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,subname
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
    deallocate (A, y0, A2)
 end program test_omp
