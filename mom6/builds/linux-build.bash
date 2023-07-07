@@ -100,16 +100,25 @@ fi
 
 compiler_options='-DMAX_FIELDS_=100 -DNOT_SET_AFFINITY -D_USE_MOM6_DIAG -D_USE_GENERIC_TRACER  -DUSE_PRECISION=2 -D_USE_LEGACY_LAND_ -Duse_AM3_physics'
 linker_options=''
-if [[ "$target" =~ "DC" ]] ; then 
+if [[ "$target" =~ "stdpar" ]] ; then 
     compiler_options="$compiler_options -stdpar -Minfo=accel"
     linker_options="$linker_options -stdpar "
 fi
 
     $srcdir/mkmf/bin/mkmf -t $abs_rootdir/$machine_name/$platform.mk -o "-I../../shared/$target" -p MOM6SIS2 -l "-L../../shared/$target -lfms $linker_options" -c "$compiler_options" path_names
 
-if [[ "$target" =~ "managedACC" ]] ; then 
+if [[ "$target" =~ "cobaltACC" ]] ; then 
     sed -e 's/-c\(.*\)COBALT/-acc -ta=nvidia:managed -Minfo=accel -c \1COBALT/' -i Makefile
     sed -e 's/-lfms/-lfms -acc/' -i Makefile
+fi
+
+if [[ "$target" =~ "cobaltOMP" ]] ; then 
+    sed -e 's/-c\(.*\)COBALT/-mp -c \1COBALT/' -i Makefile
+fi
+
+if [[ "$target" =~ "cobaltOMPGPU" ]] ; then 
+    sed -e 's/-c\(.*\)COBALT/-mp=gpu -gpu=managed -Minfo=accel -c \1COBALT/' -i Makefile
+    sed -e 's/-lfms/-lfms -mp=gpu -gpu=managed/' -i Makefile
 fi
 
     make $makeflags MOM6SIS2

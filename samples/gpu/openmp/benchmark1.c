@@ -99,7 +99,6 @@ int main(int argc, char** argv)
     float A[n][m];
     float y0[n];
     float A1d[n*m];
-    int Nl=n*m;
     
     printf("     size     time(s) iterations initial_sum          final_sum        omp_nthreads\n");
     printf("2D arrays\n");

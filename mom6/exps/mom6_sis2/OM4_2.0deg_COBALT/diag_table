@@ -61,3 +61,11 @@ OM4_SIS2_cgrid_025
  "ocean_model_d2", "uo",          "uo",              "ocean_daily_d2",            "all", "mean", "none",2
  "ocean_model_d2", "vo",          "vo",              "ocean_daily_d2",            "all", "mean", "none",2
  "ocean_model_d2", "volcello",          "volcello",              "ocean_daily_d2",            "all", "mean", "none",2
+
+"flux_day",     1,  "days", 1, "days", "time"
+"flux","u_atm","u_atm","flux_day","all",.false.,"none",2
+"flux","v_atm","v_atm","flux_day","all",.false.,"none",2
+"flux","uref_atm","uref_atm","flux_day","all",.false.,"none",2
+"flux","vref_atm","vref_atm","flux_day","all",.false.,"none",2
+"flux","u10_atm","u10_atm","flux_day","all",.false.,"none",2
+
