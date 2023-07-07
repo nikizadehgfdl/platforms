@@ -8,3 +8,5 @@
 ./linux-build.bash -m gaea -p gnu7 -t prod-openmp -f mom6sis2
 ./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
 ./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
+./linux-build.bash -m gfdl-ws -p gnu11 -t debug -f mom6solo
+./linux-build.bash -m gfdl-ws -p intel22 -t repro -f mom6solo

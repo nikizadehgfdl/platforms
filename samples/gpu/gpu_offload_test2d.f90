@@ -296,7 +296,7 @@ end subroutine benchmark2d2_docon
 !
 !     16000000 bombs
 !
-!On gfdl gpubox on 12/22/2022
+!On gfdl gpubox on 12/22/2022 with Tesla V100-PCIE
 !Niki.Zadeh: ~/platforms/samples/gpu/openmp $ \rm ./gpu_offload_test2d; nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
 !      16000000     6.226     200    0.000165991179529    0.000015737370632    1     benchmark2d0                                      
@@ -331,3 +331,12 @@ end subroutine benchmark2d2_docon
 !lscgpu50-d: /home/Niki.Zadeh/platforms/samples/gpu % nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d ; ./gpu_offload_test2d
 !     size      time(s) iterations initial_sum     final_sum        omp_nthreads subroutine
 !     100000000     0.460    2000    0.000066406416776    0.000002652284758    1 benchmark2d_omp_gpu               
+!On AWS gpu platform on 03/01/2023 with  Tesla V100-SXM2
+![Niki.Zadeh@compute-0001 ~]$ \rm ./gpu_offload_test2d; nvfortran -O2 -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d; ./gpu_offload_test2d
+!      size      time(s) iterations initial_sum     final_sum        omp_nthreads    subroutine
+!     100000000     0.186    2000    0.000066406464612    0.000002652284593    1     benchmark2d_omp_gpu                               
+!     100000000     0.135    2000    0.000066406464612    0.000002652284593    1     benchmark2d_docon  
+!-mp
+!     100000000   444.166    2000    0.000066406464612    0.000002652284593    1     benchmark2d_omp
+!     100000000   222.149    2000    0.000066406464612    0.000002652284593    2     benchmark2d_omp
+!     100000000   111.165    2000    0.000066406464612    0.000002652284593    4     benchmark2d_omp                                   

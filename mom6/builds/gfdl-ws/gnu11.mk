@@ -1,14 +1,15 @@
-# $Id: intel.mk,v 1.1.2.1.2.1.2.2.2.1.4.1 2014/06/05 19:16:00 Seth.Underwood Exp $
-# template for the Intel fortran compiler
+# $Id: gnu.mk,v 1.1.2.1.4.1.2.1.2.1 2012/11/30 16:53:18 Seth.Underwood Exp $
+# template for the GNU fortran compiler
 # typical use with mkmf
-# mkmf -t template.ifc -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
+# mkmf -t gnu.mk -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
 ############
 # commands #
 ############
-FC = ifort
-CC = icc
-CXX = icpc
-LD = ifort
+FC = gfortran
+CC = gcc
+CXX = g++
+LD = gfortran $(MAIN_PROGRAM)
+
 #########
 # flags #
 #########
@@ -19,22 +20,25 @@ OPENMP =
 
 MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 
-FPPFLAGS := -fpp -Wp,-w
+FPPFLAGS := 
 
-FFLAGS += $(shell pkg-config --cflags-only-I netcdf)
+FFLAGS := -fcray-pointer -fdefault-double-8 -fdefault-real-8 -Waliasing -ffree-line-length-none -fno-range-check -fallow-argument-mismatch
+#FFLAGS += -I$(shell nc-config --includedir)
+FFLAGS += $(shell pkg-config --cflags-only-I netcdf-fortran)
 FFLAGS += $(shell pkg-config --cflags-only-I mpich)
-FFLAGS := -fno-alias -stack-temps -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -sox -traceback
-FFLAGS_OPT = -O2
-FFLAGS_REPRO = -fltconsistency
-FFLAGS_DEBUG = -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -ftrapuv
-FFLAGS_OPENMP = -qopenmp
-FFLAGS_VERBOSE = -v -V -what
+FFLAGS_OPT = -O3 
+FFLAGS_REPRO = -O2 -fbounds-check
+FFLAGS_DEBUG = -O0 -g -W -fbounds-check -fbacktrace
+FFLAGS_OPENMP = -fopenmp
+FFLAGS_VERBOSE = 
 
-
-CFLAGS := -D__IFC -sox -traceback
+CFLAGS := -D__IFC 
+#CFLAGS += -I$(shell nc-config --includedir)
+CFLAGS += $(shell pkg-config --cflags-only-I netcdf)
+CFLAGS += $(shell pkg-config --cflags-only-I mpich)
 CFLAGS_OPT = -O2
-CFLAGS_OPENMP = -qopenmp
-CFLAGS_DEBUG = -O0 -g -ftrapuv 
+CFLAGS_OPENMP = -fopenmp
+CFLAGS_DEBUG = -O0 -g 
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
 # *_TEST will match the production if no new option(s) is(are) to be tested.
@@ -42,14 +46,13 @@ FFLAGS_TEST = -O2
 CFLAGS_TEST = -O2
 
 LDFLAGS :=
-LDFLAGS_OPENMP := -qopenmp
-LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+LDFLAGS_OPENMP := -fopenmp
+LDFLAGS_VERBOSE := 
 
 ifneq ($(REPRO),)
 CFLAGS += $(CFLAGS_REPRO)
 FFLAGS += $(FFLAGS_REPRO)
-endif
-ifneq ($(DEBUG),)
+else ifneq ($(DEBUG),)
 CFLAGS += $(CFLAGS_DEBUG)
 FFLAGS += $(FFLAGS_DEBUG)
 else ifneq ($(TEST),)
@@ -79,11 +82,11 @@ ifeq ($(NETCDF),3)
   endif
 endif
 
-LIBS := $(shell nc-config --flibs) $(shell pkg-config --libs mpich2-f90)
+LIBS := $(shell pkg-config --libs-only-L netcdf) $(shell pkg-config --libs-only-L netcdf-fortran) $(shell pkg-config --libs-only-L mpich)
+#LIBS += -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz  -lmpich -lfmpich -lfabric
+LIBS += -lnetcdff -lnetcdf -lz  -lmpich -lfmpich -lfabric
 LDFLAGS += $(LIBS)
-#LDFLAGS += -L/app/spack/linux-rhel7-x86_64/intel-19.0.5/mpich/3.2.1-wf5xw2s3lm45sr4j373szc4lm5yjkzg4/lib -lmpi -lmpifort -lrt -lpthread
-LDFLAGS += -lmpi -lmpifort
-
+ 
 #---------------------------------------------------------------------------
 # you should never need to change any lines below.
 

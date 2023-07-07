@@ -1,2 +1,10 @@
 source ../../builds/gfdl-ws/intel19_spackv015.env
 mpirun -n 8 ../../builds/build/gfdl-ws-intel19_spackv015/ocean_only/prod/MOM6
+#01/13/2023
+source ../../builds/gfdl-ws/gnu9.env
+mpirun -n 8 ../../builds/build/gfdl-ws-gnu9/ocean_only/repro/MOM6
+source ../../builds/gfdl-ws/intel19_spackv015.env
+mpirun -n 8 ../../builds/build/gfdl-ws-intel19_spackv015/ocean_only/repro/MOM6
+source ../../builds/gfdl-ws/intel22.env
+mpirun -n 8 ../../builds/build/gfdl-ws-intel22/ocean_only/repro/MOM6
+
