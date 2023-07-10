@@ -11,7 +11,7 @@
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=1000,n=1000, iter_max=2000
+  integer, parameter :: m=10000,n=1000, iter_max=2000
   integer :: i, j, iter, itermax
   real*8, parameter :: pi=2.0*asin(1.0)
   real*8, parameter :: tol=1e-10
@@ -51,6 +51,14 @@ if(.true.) then !The cpu openmp will be too slow (1000x) for large size arrays.
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
   A2(:,:)=A(:,:)
+  nthread=1
+!$   run_time = omp_get_wtime()
+   call benchmark2d_omp_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_cpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+  A2(:,:)=A(:,:)
   nthread=2
 !$   run_time = omp_get_wtime()
    call benchmark2d_omp(nthread, iter_max, m, n, A2)
@@ -70,6 +78,14 @@ endif
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
+   call benchmark2d_omp_gpu_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_gpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
    call benchmark2d_omp_gpu_subij(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu_subij'
 !$   run_time = omp_get_wtime() - run_time;
@@ -80,6 +96,51 @@ endif
    nthread=1 
    call benchmark2d_docon(nthread, iter_max, m, n, A2)
    subname='benchmark2d_docon'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+  write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)**2'
+
+  write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
+if(.true.) then !The cpu openmp will be too slow (1000x) for large size arrays.
+  A2(:,:)=A(:,:)
+  nthread=1
+!$   run_time = omp_get_wtime()
+   call benchmark2d1_omp(nthread, iter_max, m, n, A2)
+   subname='benchmark2d1_omp_cpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+  A2(:,:)=A(:,:)
+  nthread=2
+!$   run_time = omp_get_wtime()
+   call benchmark2d1_omp(nthread, iter_max, m, n, A2)
+   subname='benchmark2d1_omp_cpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+endif 
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d1_omp_gpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d1_omp_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d1_omp_gpu_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d1_omp_gpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d1_docon(nthread, iter_max, m, n, A2)
+   subname='benchmark2d1_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
@@ -102,6 +163,13 @@ if(.true.) then !The cpu will be too slow (1000x) for large size arrays. Avoid t
    subname='benchmark2d2_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=2 
+   call benchmark2d2_omp_cpu_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_cpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 endif
 
    A2(:,:)=A(:,:)
@@ -109,6 +177,13 @@ endif
    nthread=1 
    call benchmark2d2_omp_gpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_omp_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_swapij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 
@@ -145,11 +220,27 @@ subroutine benchmark2d_omp(nthread, iter_max, m, n, A)
 !$omp end parallel do
 end subroutine benchmark2d_omp
 
+subroutine benchmark2d_omp_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter,nthr
+!$ call omp_set_dynamic(0)
+!$ call omp_set_num_threads(nthread)
+
+!$omp parallel do private(iter)
+  do i=0,m-1;do j=0,n-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+  enddo; enddo
+!$omp end parallel do
+end subroutine benchmark2d_omp_swapij
 subroutine benchmark2d_omp_gpu(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
   integer :: iter
-
 !$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) private(iter) device(1)
   do j=0,n-1;do i=0,m-1
      iter=0
@@ -180,6 +271,20 @@ subroutine sub1ij(x,itermax)
      iter = iter+1
   enddo
 end subroutine sub1ij
+
+subroutine benchmark2d_omp_gpu_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) private(iter) device(1)
+  do i=0,m-1;do j=0,n-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)
+        iter = iter+1
+     enddo
+  enddo; enddo
+end subroutine benchmark2d_omp_gpu_swapij
 
 subroutine benchmark2d_docon(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
@@ -228,6 +333,39 @@ subroutine benchmark2d2_omp_gpu(nthread, iter_max, m, n, A)
   enddo
 end subroutine benchmark2d2_omp_gpu
 
+subroutine benchmark2d2_omp_cpu_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+
+!$ call omp_set_dynamic(0)
+!$ call omp_set_num_threads(nthread)
+  iter=0
+  do while (iter < iter_max)
+!$omp parallel do private(iter)
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_cpu_swapij
+
+subroutine benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A)
+!Answers are not repeatable and too different from cpu answers
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target parallel do map(tofrom: A(0:m-1,0:n-1))
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_swapij
+
 subroutine benchmark2d2_omp_gpu1(nthread, iter_max, m, n, A)
 !Answers are  different from the above and from cpu answers
 !takes a longer time
@@ -267,6 +405,85 @@ subroutine benchmark2d2_docon(nthread, iter_max, m, n, A)
     iter = iter+1
   enddo
 end subroutine benchmark2d2_docon
+
+subroutine benchmark2d1_omp(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter,nthr
+!$ call omp_set_dynamic(0)
+!$ call omp_set_num_threads(nthread)
+
+!$omp parallel do private(iter)
+   do j=0,n-1;do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)**2
+        iter = iter+1
+     enddo
+   enddo; enddo
+!$omp end parallel do
+end subroutine benchmark2d1_omp
+
+subroutine benchmark2d1_omp_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter,nthr
+!$ call omp_set_dynamic(0)
+!$ call omp_set_num_threads(nthread)
+
+!$omp parallel do private(iter)
+   do i=0,m-1;do j=0,n-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)**2
+        iter = iter+1
+     enddo
+   enddo; enddo
+!$omp end parallel do
+end subroutine benchmark2d1_omp_swapij
+subroutine benchmark2d1_omp_gpu(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+
+!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) private(iter) device(1)
+  do j=0,n-1;do i=0,m-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)**2
+        iter = iter+1
+     enddo
+  enddo; enddo
+end subroutine benchmark2d1_omp_gpu
+
+subroutine benchmark2d1_omp_gpu_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+
+!$omp target parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) private(iter) device(1)
+  do i=0,m-1;do j=0,n-1
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)**2
+        iter = iter+1
+     enddo
+  enddo; enddo
+end subroutine benchmark2d1_omp_gpu_swapij
+
+subroutine benchmark2d1_docon(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  integer :: iter
+!$ACC set device_num(1)
+  do concurrent(j=0:n-1,i=0:m-1)
+     iter=0
+     do while (iter < iter_max)
+        A(i,j) = A(i,j)*(A(i,j)-1.0)**2
+        iter = iter+1
+     enddo
+  enddo
+end subroutine benchmark2d1_docon
 !Some results
 !On Intel devcloud platform on 12/22/2022
 !-O0
