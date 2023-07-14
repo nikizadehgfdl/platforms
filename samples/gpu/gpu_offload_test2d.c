@@ -24,7 +24,7 @@ void transform_2darray_omp_gpu(int nthread, int iter_max, int m, int n,double A[
       }
     }}
 }
-void transform_2darray_omp_gpu_subij(int nthread, int iter_max, int m, int n,double A[][m])
+void transform_2darray_omp_gpu_swapij(int nthread, int iter_max, int m, int n,double A[][m])
 { 
   int iter;
   omp_set_dynamic(0);
@@ -105,6 +105,8 @@ void transform_2darray(int nthread, int iter_max, int m, int n,double A[][m])
 void benchmark2d_2_omp_cpu(int nthread, int iter_max, int m, int n,double A[][m])
 { 
   int iter;
+  double A2[n][m];
+  memset(A2, 0, n * m * sizeof(double));   
   omp_set_dynamic(0);
   omp_set_num_threads(nthread);
 
@@ -112,7 +114,32 @@ void benchmark2d_2_omp_cpu(int nthread, int iter_max, int m, int n,double A[][m]
   while (iter < iter_max){
 #pragma omp parallel for
     for( int j = 1; j < n-1; j++){for( int i = 1; i < m-1; i++ ){
-	A[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
+	A2[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
+      }}
+#pragma omp parallel for
+    for( int j = 1; j < n-1; j++){for( int i = 1; i < m-1; i++ ){
+	A[j][i] = A2[j][i];
+      }}
+    iter += 1;
+  }
+}
+void benchmark2d_2_omp_cpu_swapij(int nthread, int iter_max, int m, int n,double A[][m])
+{ 
+  int iter;
+  double A2[n][m];
+  memset(A2, 0, n * m * sizeof(double));   
+  omp_set_dynamic(0);
+  omp_set_num_threads(nthread);
+
+  iter=0;
+  while (iter < iter_max){
+#pragma omp parallel for
+    for( int i = 1; i < m-1; i++ ){for( int j = 1; j < n-1; j++){
+	A2[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
+      }}
+#pragma omp parallel for
+    for( int i = 1; i < m-1; i++ ){for( int j = 1; j < n-1; j++){
+	A[j][i] = A2[j][i];
       }}
     iter += 1;
   }
@@ -120,22 +147,55 @@ void benchmark2d_2_omp_cpu(int nthread, int iter_max, int m, int n,double A[][m]
 void benchmark2d_2_omp_gpu(int nthread, int iter_max, int m, int n,double A[][m])
 { 
   int iter;
+  double A2[n][m];
+  memset(A2, 0, n * m * sizeof(double));   
   omp_set_dynamic(0);
   omp_set_num_threads(nthread);
 
   iter=0;
   while (iter < iter_max){
-#pragma omp target parallel for map(tofrom: A[0:n][0:m]) 
-    for( int j = 1; j < n-1; j++){for( int i = 1; i < m-1; i++ ){
-	A[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
+#pragma omp target data map(tofrom: A[0:n][0:m]) map(to: A2[0:n][0:m]) 
+    {
+#pragma omp target parallel for
+    for( int i = 1; i < m-1; i++ ){for( int j = 1; j < n-1; j++){
+	A2[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
       }}
+#pragma omp target parallel for
+    for( int i = 1; i < m-1; i++ ){for( int j = 1; j < n-1; j++){
+	A[j][i] = A2[j][i];
+      }}
+    }
+    iter += 1;
+  }
+}
+void benchmark2d_2_omp_gpu_swapij(int nthread, int iter_max, int m, int n,double A[][m])
+{ 
+  int iter;
+  double A2[n][m];
+  memset(A2, 0, n * m * sizeof(double));   
+  omp_set_dynamic(0);
+  omp_set_num_threads(nthread);
+
+  iter=0;
+  while (iter < iter_max){
+#pragma omp target data map(tofrom: A[0:n][0:m]) map(to: A2[0:n][0:m]) 
+    {
+#pragma omp target parallel for
+    for( int j = 1; j < n-1; j++){for( int i = 1; i < m-1; i++ ){
+	A2[j][i] = 0.25*(A[j][i-1]+A[j][i+1]+A[j-1][i]+A[j+1][i]);
+      }}
+#pragma omp target parallel for
+    for( int j = 1; j < n-1; j++){for( int i = 1; i < m-1; i++ ){
+	A[j][i] = A2[j][i];
+      }}
+    }
     iter += 1;
   }
 }
 int main(int argc, char** argv)
 {
-    int n = 1000;
-    int m = 1000;
+    int n = 10000;
+    int m = 10000;
     int iter_max = 2000;
     int nthread=1;
     const double pi  = 2.0f * asinf(1.0f);
@@ -178,7 +238,7 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
     sum0=0.0;for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sum0 += A2[j][i];}}
@@ -189,7 +249,7 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
     //benchmark2d_omp_gpu
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
@@ -201,19 +261,19 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
     //benchmark2d_omp_gpu_subij
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
     sum0=0.0;for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sum0 += A2[j][i];}}
     nthread =1;
     runtime = omp_get_wtime();//Start timer
-    transform_2darray_omp_gpu_subij(nthread,iter_max,m,n,A2);
-    subname="benchmark2d_omp_gpu_subij";
+    transform_2darray_omp_gpu_swapij(nthread,iter_max,m,n,A2);
+    subname="benchmark2d_omp_gpu_swapij";
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
     printf("     non-vectorizable subroutine Aij=(Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4 \n");
     printf("     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine\n");
@@ -228,7 +288,7 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
     sum0=0.0;for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sum0 += A2[j][i];}}
@@ -239,7 +299,18 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+ 
+    for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
+    sum0=0.0;for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sum0 += A2[j][i];}}
+    nthread =2;
+    runtime = omp_get_wtime();//Start timer
+    benchmark2d_2_omp_cpu_swapij(nthread,iter_max,m,n,A2);
+    subname="benchmark2d_2_omp_cpu_swapij";
+    runtime = omp_get_wtime() - runtime;//End timer
+    sumA=0.0;
+    for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
  
     //benchmark2d_omp_gpu
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
@@ -251,7 +322,18 @@ int main(int argc, char** argv)
     runtime = omp_get_wtime() - runtime;//End timer
     sumA=0.0;
     for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
-    printf("%12d%8.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
+
+    for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){A2[j][i] = A[j][i];}}
+    sum0=0.0;for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sum0 += A2[j][i];}}
+    nthread =1;
+    runtime = omp_get_wtime();//Start timer
+    benchmark2d_2_omp_gpu_swapij(nthread,iter_max,m,n,A2);
+    subname="benchmark2d_2_omp_gpu_swapij";
+    runtime = omp_get_wtime() - runtime;//End timer
+    sumA=0.0;
+    for( int j = 0; j < n; j++){for( int i = 0; i < m; i++ ){sumA += A2[j][i];}}
+    printf("%12d%10.3f%8d%21.15f%21.15f%5d%30s\n",  n*m, runtime,iter_max,sum0/n/m,sumA/n/m,nthread,subname); 
 
 
 }

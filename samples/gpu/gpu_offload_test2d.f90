@@ -11,7 +11,7 @@
 program test_omp
   implicit none
   include 'omp_lib.h'        
-  integer, parameter :: m=10000,n=1000, iter_max=2000
+  integer, parameter :: m=10000,n=10000, iter_max=2000
   integer :: i, j, iter, itermax
   real*8, parameter :: pi=2.0*asin(1.0)
   real*8, parameter :: tol=1e-10
@@ -37,7 +37,7 @@ program test_omp
 
   sum0=sum(A)/n/m
 
-
+if(.true.) then
   write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)'
 
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
@@ -90,7 +90,6 @@ endif
    subname='benchmark2d_omp_gpu_subij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
@@ -98,6 +97,10 @@ endif
    subname='benchmark2d_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+endif
+
+if(.false.) then
 
   write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)**2'
 
@@ -143,7 +146,7 @@ endif
    subname='benchmark2d1_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-
+endif
 !!!!!2d average subs
   write(*,'(a)')  '     non-vectorizable subroutine Aij=(Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4'
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
@@ -303,104 +306,111 @@ end subroutine benchmark2d_docon
 subroutine benchmark2d2_omp_cpu(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
   integer :: iter
 
 !$ call omp_set_dynamic(0)
 !$ call omp_set_num_threads(nthread)
   iter=0
   do while (iter < iter_max)
-!$omp parallel do private(iter)
+!$omp parallel do
     do j=1,n-2;do i=1,m-2
-      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+!$omp parallel do
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
     enddo; enddo
     iter = iter+1
   enddo
 end subroutine benchmark2d2_omp_cpu
 
-subroutine benchmark2d2_omp_gpu(nthread, iter_max, m, n, A)
-!Answers are not repeatable and too different from cpu answers
-  integer, intent(in) :: nthread, iter_max, m, n
-  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
-  integer :: iter
-
-  iter=0
-  do while (iter < iter_max)
-!$omp target parallel do map(tofrom: A(0:m-1,0:n-1))
-    do j=1,n-2;do i=1,m-2
-      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
-    enddo; enddo
-    iter = iter+1
-  enddo
-end subroutine benchmark2d2_omp_gpu
-
 subroutine benchmark2d2_omp_cpu_swapij(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
   integer :: iter
 
 !$ call omp_set_dynamic(0)
 !$ call omp_set_num_threads(nthread)
   iter=0
   do while (iter < iter_max)
-!$omp parallel do private(iter)
+!$omp parallel do
     do i=1,m-2;do j=1,n-2
-      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+!$omp parallel do
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
     enddo; enddo
     iter = iter+1
   enddo
 end subroutine benchmark2d2_omp_cpu_swapij
 
+subroutine benchmark2d2_omp_gpu(nthread, iter_max, m, n, A)
+!Answers are not repeatable and too different from cpu answers
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target parallel do
+    do j=1,n-2;do i=1,m-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target parallel do
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu
+
+
 subroutine benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A)
 !Answers are not repeatable and too different from cpu answers
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
   integer :: iter
 
   iter=0
   do while (iter < iter_max)
-!$omp target parallel do map(tofrom: A(0:m-1,0:n-1))
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target parallel do
     do i=1,m-2;do j=1,n-2
-      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
     enddo; enddo
+
+!$omp target parallel do
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
     iter = iter+1
   enddo
 end subroutine benchmark2d2_omp_gpu_swapij
 
-subroutine benchmark2d2_omp_gpu1(nthread, iter_max, m, n, A)
-!Answers are  different from the above and from cpu answers
-!takes a longer time
-  integer, intent(in) :: nthread, iter_max, m, n
-  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
-  integer :: iter
-  real*8, dimension(0:m-1,0:n-1) :: Anew
-
-  iter=0
-  do while (iter < iter_max)
-!$omp target map(tofrom: A(0:m-1,0:n-1),Anew(0:m-1,0:n-1))
-!$omp parallel do
-    do j=1,n-2;do i=1,m-2
-      Anew(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
-    enddo; enddo
-
-!$omp parallel do
-    do j=1,n-2;do i=1,m-2
-      A(i,j) = Anew(i,j)
-    enddo; enddo
-!$omp end target
-    iter = iter+1
-  enddo
-
-end subroutine benchmark2d2_omp_gpu1
-
 subroutine benchmark2d2_docon(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
   integer :: iter
   iter=0
   do while (iter < iter_max)
-!$ACC set device_num(1)
+!hack$ACC set device_num(1) !This is just a hack to use the other gpu device
     do concurrent(j=1:n-2,i=1:m-2)
-      A(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo
+    do concurrent(j=1:n-2,i=1:m-2)
+      A(i,j) = AN(i,j)
     enddo
     iter = iter+1
   enddo
