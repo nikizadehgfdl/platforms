@@ -21,6 +21,9 @@ program test_omp
   real*8 :: run_time
   integer :: nthread, nthreads,nthr
   character (len = 50) :: subname
+  logical :: simple_nonlinear=.false.
+  logical :: omp_cpu=.true.
+  logical :: docon=.true.
   nthread = 1
 
 
@@ -37,11 +40,11 @@ program test_omp
 
   sum0=sum(A)/n/m
 
-if(.true.) then
-  write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)'
+if(simple_nonlinear) then
+  write(*,'(a)')  '     subroutine Aij=Aij*(Aij-1)'
 
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
-if(.true.) then !The cpu openmp will be too slow (1000x) for large size arrays.
+if(.false.) then !The cpu openmp will be too slow (1000x) for large size arrays.
   A2(:,:)=A(:,:)
   nthread=1
 !$   run_time = omp_get_wtime()
@@ -90,6 +93,7 @@ endif
    subname='benchmark2d_omp_gpu_subij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+if(docon) then
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
@@ -97,61 +101,15 @@ endif
    subname='benchmark2d_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+endif
 
 endif
 
-if(.false.) then
-
-  write(*,'(a)')  '     fully vectorizable subroutine Aij=Aij*(Aij-1)**2'
-
-  write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
-if(.true.) then !The cpu openmp will be too slow (1000x) for large size arrays.
-  A2(:,:)=A(:,:)
-  nthread=1
-!$   run_time = omp_get_wtime()
-   call benchmark2d1_omp(nthread, iter_max, m, n, A2)
-   subname='benchmark2d1_omp_cpu'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-
-  A2(:,:)=A(:,:)
-  nthread=2
-!$   run_time = omp_get_wtime()
-   call benchmark2d1_omp(nthread, iter_max, m, n, A2)
-   subname='benchmark2d1_omp_cpu'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-endif 
-
-   A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=1 
-   call benchmark2d1_omp_gpu(nthread, iter_max, m, n, A2)
-   subname='benchmark2d1_omp_gpu'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-
-   A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=1 
-   call benchmark2d1_omp_gpu_swapij(nthread, iter_max, m, n, A2)
-   subname='benchmark2d1_omp_gpu_swapij'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-
-   A2(:,:)=A(:,:)
-!$   run_time = omp_get_wtime()
-   nthread=1 
-   call benchmark2d1_docon(nthread, iter_max, m, n, A2)
-   subname='benchmark2d1_docon'
-!$   run_time = omp_get_wtime() - run_time;
-   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
-endif
 !!!!!2d average subs
-  write(*,'(a)')  '     non-vectorizable subroutine Aij=(Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4'
+  write(*,'(a)')  '     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4'
   write(*,'(a)')  '     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine'
 
-if(.true.) then !The cpu will be too slow (1000x) for large size arrays. Avoid this test unless you really want to.
+if(omp_cpu) then !The cpu will be too slow (1000x) for large size arrays. Avoid this test unless you really want to.
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
@@ -193,10 +151,36 @@ endif
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
+   call benchmark2d2_acc_gpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_acc_gpu'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_acc_gpu_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_acc_gpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+if(docon) then
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
    call benchmark2d2_docon(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_docon'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_docon_swapij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_docon_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+endif
 
    deallocate (A, y0, A2)
 end program test_omp
@@ -348,7 +332,6 @@ subroutine benchmark2d2_omp_cpu_swapij(nthread, iter_max, m, n, A)
 end subroutine benchmark2d2_omp_cpu_swapij
 
 subroutine benchmark2d2_omp_gpu(nthread, iter_max, m, n, A)
-!Answers are not repeatable and too different from cpu answers
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
   real*8, dimension(0:m-1,0:n-1) :: AN
@@ -374,7 +357,6 @@ end subroutine benchmark2d2_omp_gpu
 
 
 subroutine benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A)
-!Answers are not repeatable and too different from cpu answers
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
   real*8, dimension(0:m-1,0:n-1) :: AN
@@ -398,6 +380,54 @@ subroutine benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A)
   enddo
 end subroutine benchmark2d2_omp_gpu_swapij
 
+subroutine benchmark2d2_acc_gpu(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!ACC data copy(A)   !!not needed, possibly default? 
+!$ACC parallel loop !!collapse(2) cause slow down
+    do j=1,n-2;do i=1,m-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$ACC parallel loop !!collapse(2) cause slow down
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!ACC end data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_acc_gpu
+
+subroutine benchmark2d2_acc_gpu_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!ACC data copy(A)   !!not needed, possibly default? 
+!$ACC parallel loop !!collapse(2) cause slow down
+    do i=1,m-2;do j=1,n-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$ACC parallel loop !!collapse(2) cause slow down
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!ACC end data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_acc_gpu_swapij
+
 subroutine benchmark2d2_docon(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
   real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
@@ -415,6 +445,24 @@ subroutine benchmark2d2_docon(nthread, iter_max, m, n, A)
     iter = iter+1
   enddo
 end subroutine benchmark2d2_docon
+
+subroutine benchmark2d2_docon_swapij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+  iter=0
+  do while (iter < iter_max)
+!hack$ACC set device_num(1) !This is just a hack to use the other gpu device
+    do concurrent(i=1:m-2,j=1:n-2)
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo
+    do concurrent(i=1:m-2,j=1:n-2)
+      A(i,j) = AN(i,j)
+    enddo
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_docon_swapij
 
 subroutine benchmark2d1_omp(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
