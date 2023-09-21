@@ -6,7 +6,14 @@
 ./linux-build.bash -m gaea -p pgi18 -t prod-openmp -f mom6sis2
 ./linux-build.bash -m gaea -p gnu7 -t prod -f mom6sis2
 ./linux-build.bash -m gaea -p gnu7 -t prod-openmp -f mom6sis2
-./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
-./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
 ./linux-build.bash -m gfdl-ws -p gnu11 -t debug -f mom6solo
 ./linux-build.bash -m gfdl-ws -p intel22 -t repro -f mom6solo
+
+./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
+./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-stdpar -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltOMPGPU -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltACC -f mom6sis2
+source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230501
+./linux-build.bash -m lscamd50 -p intel22 -t repro -f mom6sis2
+source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel22/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscamd50-intel22.repro.n1.20230919
