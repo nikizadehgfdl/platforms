@@ -1,6 +1,6 @@
 !This is a quick test for openmp
 !To compile and run do:
-!\rm ./gpu_offload_test2d2; nvfortran -mp=gpu -stdpar gpu_offload_test2d2.f90 -o gpu_offload_test2d2;./gpu_offload_test2d2
+!\rm ./gpu_offload_test2d; nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
 !Output on gpubox
 !      size        time(s) iterations initial_sum         final_sum    omp_nthreads    subroutine
 !     100000000   429.689    2000    0.000066406416776    0.000002652284758    1   benchmark2d_omp_cpu                                   
@@ -8,6 +8,31 @@
 !     100000000     0.458    2000    0.000066406416776    0.000002652284758    1   benchmark2d_omp_gpu                               
 !     100000000     0.353    2000    0.000066406416776    0.000002652284758    1   benchmark2d_omp_gpu_subij                         
 !     100000000     0.189    2000    0.000066406416776    0.000002652284758    1   benchmark2d_docon             
+!New amdbox with gpu on 10/3/2023
+!     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+!     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+!     100000000   362.411    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_cpu
+!     100000000   245.102    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu
+!     100000000  3248.025    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu_swapij
+!     100000000    53.817    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+!     100000000    13.750    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+!     100000000    14.689    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+!     100000000    13.769    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+!     100000000    11.757    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+!     100000000    11.777    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+!perlmutter on 10/2/2023
+!     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+!     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+!     100000000   364.198    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_cpu
+!     100000000   382.799    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu
+!     100000000  1709.646    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu_swapij
+!     100000000    20.039    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+!     100000000    11.532    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+!     100000000     5.343    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+!     100000000     8.161    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+!     100000000     5.242    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+!     100000000     5.230    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+
 program test_omp
   implicit none
   include 'omp_lib.h'        
