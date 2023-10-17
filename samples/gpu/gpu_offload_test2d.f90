@@ -1,7 +1,24 @@
 !This is a quick test for openmp
 !To compile and run do:
 !\rm ./gpu_offload_test2d; nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d;./gpu_offload_test2d
-!Output on gpubox
+!Output on amdbox+gpu on 10/06/2023 Tesla V100-PCIE-32GB
+![Niki.Zadeh@lscamd50-d gpu]$ nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d; ./gpu_offload_test2d
+!     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+!     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+!     100000000    59.777    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+!     100000000    53.346    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2
+!     100000000     9.255    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_teams
+!     100000000     8.806    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_loop
+!     100000000    13.705    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+!     100000000    13.746    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2
+!     100000000    54.321    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_teams
+!     100000000    56.376    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_loop
+!     100000000    14.687    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+!     100000000    13.720    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+!     100000000    11.815    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+!     100000000    11.833    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+!
+!Output on old gpubox (same Tesla V100-PCIE-32GB as above)
 !      size        time(s) iterations initial_sum         final_sum    omp_nthreads    subroutine
 !     100000000   429.689    2000    0.000066406416776    0.000002652284758    1   benchmark2d_omp_cpu                                   
 !     100000000   235.189    2000    0.000066406416776    0.000002652284758    2   benchmark2d_omp_cpu                                   
@@ -47,7 +64,7 @@ program test_omp
   integer :: nthread, nthreads,nthr
   character (len = 50) :: subname
   logical :: simple_nonlinear=.false.
-  logical :: omp_cpu=.true.
+  logical :: omp_cpu=.false.
   logical :: docon=.true.
   nthread = 1
 
@@ -81,7 +98,7 @@ if(.false.) then !The cpu openmp will be too slow (1000x) for large size arrays.
   A2(:,:)=A(:,:)
   nthread=1
 !$   run_time = omp_get_wtime()
-   call benchmark2d_omp_swapij(nthread, iter_max, m, n, A2)
+!   call benchmark2d_omp_swapij(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_cpu_swapij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
@@ -89,7 +106,7 @@ if(.false.) then !The cpu openmp will be too slow (1000x) for large size arrays.
   A2(:,:)=A(:,:)
   nthread=2
 !$   run_time = omp_get_wtime()
-   call benchmark2d_omp(nthread, iter_max, m, n, A2)
+!   call benchmark2d_omp(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
@@ -98,7 +115,7 @@ endif
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
-   call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
+!   call benchmark2d_omp_gpu(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
@@ -116,6 +133,22 @@ endif
    nthread=1 
    call benchmark2d_omp_gpu_subij(nthread, iter_max, m, n, A2)
    subname='benchmark2d_omp_gpu_subij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d_omp_gpu_teams_subij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_gpu_teams_subij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d_omp_gpu_loop_subij(nthread, iter_max, m, n, A2)
+   subname='benchmark2d_omp_gpu_loop_subij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 if(docon) then
@@ -165,6 +198,29 @@ endif
    subname='benchmark2d2_omp_gpu'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_collapse2(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_collapse2'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_collapse2_teams(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_collapse2_teams'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_collapse2_loop(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_collapse2_loop'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
    nthread=1 
@@ -172,6 +228,28 @@ endif
    subname='benchmark2d2_omp_gpu_swapij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_swapij_collapse2(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_swapij_collapse2'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_swapij_collapse2_teams(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_swapij_collapse2_teams'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_omp_gpu_swapij_collapse2_loop(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_gpu_swapij_collapse2_loop'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
 
    A2(:,:)=A(:,:)
 !$   run_time = omp_get_wtime()
@@ -272,6 +350,26 @@ subroutine benchmark2d_omp_gpu_subij(nthread, iter_max, m, n, A)
      call sub1ij(A(i,j),iter_max)
   enddo; enddo
 end subroutine benchmark2d_omp_gpu_subij
+
+subroutine benchmark2d_omp_gpu_teams_subij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+
+!$omp target teams distribute parallel do collapse(2) map(tofrom: A(0:m-1,0:n-1)) device(1)
+  do j=0,n-1;do i=0,m-1
+     call sub1ij(A(i,j),iter_max)
+  enddo; enddo
+end subroutine benchmark2d_omp_gpu_teams_subij
+
+subroutine benchmark2d_omp_gpu_loop_subij(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+
+!$omp target loop collapse(2) map(tofrom: A(0:m-1,0:n-1)) device(1)
+  do j=0,n-1;do i=0,m-1
+     call sub1ij(A(i,j),iter_max)
+  enddo; enddo
+end subroutine benchmark2d_omp_gpu_loop_subij
 
 subroutine sub1ij(x,itermax)
   real*8, intent(inout) :: x
@@ -380,6 +478,150 @@ subroutine benchmark2d2_omp_gpu(nthread, iter_max, m, n, A)
   enddo
 end subroutine benchmark2d2_omp_gpu
 
+subroutine benchmark2d2_omp_gpu_collapse2(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target parallel do collapse(2)
+    do j=1,n-2;do i=1,m-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target parallel do collapse(2)
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_collapse2
+
+subroutine benchmark2d2_omp_gpu_collapse2_teams(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target teams distribute parallel do collapse(2)
+    do j=1,n-2;do i=1,m-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target teams distribute parallel do collapse(2)
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_collapse2_teams
+
+subroutine benchmark2d2_omp_gpu_collapse2_loop(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target loop collapse(2)
+    do j=1,n-2;do i=1,m-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target loop collapse(2)
+    do j=1,n-2;do i=1,m-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_collapse2_loop
+
+
+subroutine benchmark2d2_omp_gpu_swapij_collapse2(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target parallel do collapse(2)
+    do i=1,m-2;do j=1,n-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target parallel do collapse(2)
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_swapij_collapse2
+
+subroutine benchmark2d2_omp_gpu_swapij_collapse2_teams(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target teams distribute parallel do collapse(2)
+    do i=1,m-2;do j=1,n-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target teams distribute parallel do collapse(2)
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_swapij_collapse2_teams
+
+subroutine benchmark2d2_omp_gpu_swapij_collapse2_loop(nthread, iter_max, m, n, A)
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+
+  iter=0
+  do while (iter < iter_max)
+!$omp target data map(tofrom: A(0:m-1,0:n-1)) map(to: AN(0:m-1,0:n-1))
+!$omp target loop collapse(2)
+    do i=1,m-2;do j=1,n-2
+      AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+    enddo; enddo
+
+!$omp target loop collapse(2)
+    do i=1,m-2;do j=1,n-2
+      A(i,j) = AN(i,j)
+    enddo; enddo
+
+!$omp end target data
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_omp_gpu_swapij_collapse2_loop
 
 subroutine benchmark2d2_omp_gpu_swapij(nthread, iter_max, m, n, A)
   integer, intent(in) :: nthread, iter_max, m, n
