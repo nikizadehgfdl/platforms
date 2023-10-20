@@ -136,6 +136,6 @@ ocean_nthreads = 4
  &generic_COBALT_nml
        co2_calc = 'mocsy'
        debug = .false.
-nthreads = 1
+!nthreads = 1
 /
 
