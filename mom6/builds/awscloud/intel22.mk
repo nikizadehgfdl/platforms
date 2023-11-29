@@ -1,4 +1,4 @@
-# Template for the PGI Compilers on a Cray System
+# Template for the Intel Compilers on a Cray System
 #
 # Typical use with mkmf
 # mkmf -t ncrc-cray.mk -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
@@ -6,9 +6,10 @@
 ############
 # Commands Macros
 ############
-FC = mpifort
-CC = mpicc
-LD = mpifort $(MAIN_PROGRAM)
+FC = mpiifort
+CC = mpiicc
+CXX = mpiicpc
+LD = mpiifort
 
 #######################
 # Build target macros
@@ -38,9 +39,6 @@ VERBOSE =            # If non-blank, add additional verbosity compiler
 
 OPENMP =             # If non-blank, compile with openmp enabled
 
-OPENACC =            # If non-blank, compile with openacc enabled
-OPENACC_managed =    # If non-blank, compile with openacc enabled and managed memory mode
-
 NO_OVERRIDE_LIMITS = # If non-blank, do not use the -qoverride-limits
                      # compiler option.  Default behavior is to compile
                      # with -qoverride-limits.
@@ -52,9 +50,10 @@ NETCDF =             # If value is '3' and CPPDEFS contains
 INCLUDES =           # A list of -I Include directories to be added to the
                      # the compile command.
 
-SSE =                # The SSE options to be used to compile.  If blank,
-                     # than use the default SSE settings for the host.
-                     # Current default is to use SSE2.
+#ISA = -xsse2         # The Intel Instruction Set Archetecture (ISA) compile
+ISA = -march=core-avx-i -qno-opt-dynamic-align
+                     # option to use.  If blank, than use the default SSE
+                     # settings for the host.  Current default is to use SSE2.
 
 COVERAGE =           # Add the code coverage compile options.
 
@@ -79,73 +78,66 @@ $(error Options DEBUG and TEST cannot be used together)
 endif
 endif
 
-# Check version of PGI for use of -nofma option
-has_nofma := $(shell $(FC) -dryrun -nofma foo.f90 > /dev/null 2>&1; echo $$?)
-ifneq ($(has_nofma),0)
-NOFMA :=
-else
-NOFMA := -nofma
-endif
-
 MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 
+# Required Preprocessor Macros:
+CPPDEFS += -Duse_netCDF
+
+# Additional Preprocessor Macros needed due to  Autotools and CMake
+#CPPDEFS += -DHAVE_SCHED_GETAFFINITY -DHAVE_GETTID
+
 # Macro for Fortran preprocessor
-FPPFLAGS = $(INCLUDES)
+FPPFLAGS := -fpp -Wp,-w $(INCLUDES)
 # Fortran Compiler flags for the NetCDF library
-FPPFLAGS += -I/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/include
-FPPFLAGS += -I/opt/netcdf/4.7.4/NVHPC/include
+FPPFLAGS += $(shell nf-config --fflags)
 
 # Base set of Fortran compiler flags
-FFLAGS = -i4 -r8 -byteswapio -Mcray=pointer -Mcray=pointer -Mflushz -Mdaz -D_F2000 -DNO_QUAD_PRECISION
+FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -sox -traceback
 
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
-FFLAGS_OPT = -O3 -Mvect=nosse -Mnoscalarsse -Mallocatable=95
-FFLAGS_REPRO = -O2 -Mvect=nosse -Mnoscalarsse $(NOFMA)
-FFLAGS_DEBUG = -O0 -g -traceback -Ktrap=fp
+FFLAGS_OPT = -O3 -debug minimal -fp-model source
+FFLAGS_REPRO = -O2 -debug minimal -fp-model source
+FFLAGS_DEBUG = -g -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -ftrapuv
 
 # Flags to add additional build options
-FFLAGS_OPENMP = -mp
-FFLAGS_VERBOSE = -v -Minform=inform
-FFLAGS_COVERAGE =
-FFLAGS_OPENACC = -acc -ta=nvidia -Minfo=accel
-FFLAGS_OPENACC_managed = -acc -ta=nvidia:managed -Minfo=accel
+FFLAGS_OPENMP = -qopenmp
+FFLAGS_OVERRIDE_LIMITS = -qoverride-limits
+FFLAGS_VERBOSE = -v -V -what -warn all -qopt-report-phase=vec -qopt-report=2 
+FFLAGS_COVERAGE = -prof-gen=srcpos
 
 # Macro for C preprocessor
-CPPFLAGS = $(INCLUDES)
-CPPFLAGS += -I/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/include
+CPPFLAGS := -D__IFC $(INCLUDES)
 # C Compiler flags for the NetCDF library
-CPPFLAGS += -I/opt/netcdf/4.7.4/NVHPC/include
+CPPFLAGS += $(shell nc-config --cflags)
+
 # Base set of C compiler flags
-CFLAGS =
+CFLAGS := -sox -traceback
+
+CFLAGS += -no-multibyte-chars #for AWS cloud
 
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
-CFLAGS_OPT = -O2
-CFLAGS_REPRO = -O2
-CFLAGS_DEBUG = -O0 -g -traceback -Ktrap=fp
+CFLAGS_OPT = -O2 -debug minimal
+CFLAGS_REPRO = -O2 -debug minimal
+CFLAGS_DEBUG = -O0 -g -ftrapuv
 
 # Flags to add additional build options
-CFLAGS_OPENMP = -mp
-CFLAGS_VERBOSE = -v -Minform=inform
-CFLAGS_COVERAGE =
+CFLAGS_OPENMP = -qopenmp
+CFLAGS_VERBOSE = -w3
+CFLAGS_COVERAGE = -prof-gen=srcpos
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
 # *_TEST will match the production if no new option(s) is(are) to be tested.
-FFLAGS_TEST = $(FFLAGS_OPT)
-CFLAGS_TEST = $(CFLAGS_OPT)
+FFLAGS_TEST := $(FFLAGS_OPT)
+CFLAGS_TEST := $(CFLAGS_OPT)
 
 # Linking flags
-LDFLAGS := -byteswapio
-LDFLAGS_OPENMP :=
-LDFLAGS_OPENACC := -acc
-LDFLAGS_VERBOSE := -v
-LDFLAGS_COVERAGE :=
+LDFLAGS :=
+LDFLAGS_OPENMP := -qopenmp
+LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+LDFLAGS_COVERAGE = -prof-gen=srcpos
 
-# Start with a blank LIBS
-LIBS := -L/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/lib/ 
-LIBS += -L/opt/netcdf/4.7.4/NVHPC/lib64/ 
-#LIBS += -L/usr/lib/x86_64-linux-gnu/hdf5/serial
-#LIBS += -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz -lmpi -lmpi_mpifh
-LIBS += -lnetcdff -lnetcdf -lz -lmpi -lmpi_mpifh -lopen-pal -lopen-rte
+# Start with blank LIBS
+LIBS :=
 
 # Get compile flags based on target macros.
 ifdef REPRO
@@ -168,21 +160,9 @@ FFLAGS += $(FFLAGS_OPENMP)
 LDFLAGS += $(LDFLAGS_OPENMP)
 endif
 
-ifdef OPENACC
-#CFLAGS += $(CFLAGS_OPENMP)
-FFLAGS += $(FFLAGS_OPENACC)
-LDFLAGS += $(LDFLAGS_OPENACC)
-endif
-
-ifdef OPENACC_managed
-#CFLAGS += $(CFLAGS_OPENMP)
-FFLAGS += $(FFLAGS_OPENACC_managed)
-LDFLAGS += $(LDFLAGS_OPENACC)
-endif
-
-ifdef SSE
-CFLAGS += $(SSE)
-FFLAGS += $(SSE)
+ifdef ISA
+CFLAGS += $(ISA)
+FFLAGS += $(ISA)
 endif
 
 ifdef NO_OVERRIDE_LIMITS
@@ -197,9 +177,7 @@ endif
 
 ifeq ($(NETCDF),3)
   # add the use_LARGEFILE cppdef
-  ifneq ($(findstring -Duse_netCDF,$(CPPDEFS)),)
-    CPPDEFS += -Duse_LARGEFILE
-  endif
+  CPPDEFS += -Duse_LARGEFILE
 endif
 
 ifdef COVERAGE
@@ -211,7 +189,15 @@ FFLAGS += $(FFLAGS_COVERAGE) $(PROF_DIR)
 LDFLAGS += $(LDFLAGS_COVERAGE) $(PROF_DIR)
 endif
 
+FFLAGS += -I/apps/netcdf/4.6.1/intel/16.1.150/include 
+FFLAGS += -I/apps/intel/impi/2019.8.254/intel64/include 
+LIBS := $(shell nc-config --libs) $(shell pkg-config --libs mpich2-f90)
 LDFLAGS += $(LIBS)
+LDFLAGS += -L/apps/intel/impi/2019.8.254/intel64/lib 
+LDFLAGS += -lmpi
+LDFLAGS += -lnetcdf -lnetcdff
+LDFLAGS += -lm 
+LDFLAGS += -L/apps/intel/lib/intel64 -limf -lsvml -lintlc -lifcore -lifport
 
 #---------------------------------------------------------------------------
 # you should never need to change any lines below.

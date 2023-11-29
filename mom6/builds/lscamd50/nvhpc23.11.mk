@@ -6,9 +6,9 @@
 ############
 # Commands Macros
 ############
-FC = mpifort
+FC = mpif90
 CC = mpicc
-LD = mpifort $(MAIN_PROGRAM)
+LD = mpif90 $(MAIN_PROGRAM)
 
 #######################
 # Build target macros
@@ -38,8 +38,9 @@ VERBOSE =            # If non-blank, add additional verbosity compiler
 
 OPENMP =             # If non-blank, compile with openmp enabled
 
+OPENMPGPU =          # If non-blank, compile with openmp gpu offload enabled
+
 OPENACC =            # If non-blank, compile with openacc enabled
-OPENACC_managed =    # If non-blank, compile with openacc enabled and managed memory mode
 
 NO_OVERRIDE_LIMITS = # If non-blank, do not use the -qoverride-limits
                      # compiler option.  Default behavior is to compile
@@ -92,8 +93,8 @@ MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 # Macro for Fortran preprocessor
 FPPFLAGS = $(INCLUDES)
 # Fortran Compiler flags for the NetCDF library
-FPPFLAGS += -I/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/include
-FPPFLAGS += -I/opt/netcdf/4.7.4/NVHPC/include
+#FPPFLAGS += -I/opt/openmpi/4.1.4/NVHPC/22.5/include
+FPPFLAGS += -I/opt/netcdf/4.9.2/NVHPC/23.7/include
 
 # Base set of Fortran compiler flags
 FFLAGS = -i4 -r8 -byteswapio -Mcray=pointer -Mcray=pointer -Mflushz -Mdaz -D_F2000 -DNO_QUAD_PRECISION
@@ -105,18 +106,18 @@ FFLAGS_DEBUG = -O0 -g -traceback -Ktrap=fp
 
 # Flags to add additional build options
 FFLAGS_OPENMP = -mp
+FFLAGS_OPENMPGPU = -mp=gpu -Minfo=accel -gpu=managed
 FFLAGS_VERBOSE = -v -Minform=inform
 FFLAGS_COVERAGE =
-FFLAGS_OPENACC = -acc -ta=nvidia -Minfo=accel
-FFLAGS_OPENACC_managed = -acc -ta=nvidia:managed -Minfo=accel
+FFLAGS_OPENACC = -acc -ta=nvidia:managed -Minfo=accel
 
 # Macro for C preprocessor
 CPPFLAGS = $(INCLUDES)
-CPPFLAGS += -I/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/include
+#CPPFLAGS += -I/opt/openmpi/4.1.4/NVHPC/22.5/include
 # C Compiler flags for the NetCDF library
-CPPFLAGS += -I/opt/netcdf/4.7.4/NVHPC/include
+CPPFLAGS += -I/opt/netcdf/4.9.2/NVHPC/23.7/include
 # Base set of C compiler flags
-CFLAGS =
+CFLAGS = -DHAVE_GETTID
 
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
 CFLAGS_OPT = -O2
@@ -135,17 +136,18 @@ CFLAGS_TEST = $(CFLAGS_OPT)
 
 # Linking flags
 LDFLAGS := -byteswapio
-LDFLAGS_OPENMP :=
+LDFLAGS_OPENMP := -mp
+LDFLAGS_OPENMPGPU := -mp=gpu
 LDFLAGS_OPENACC := -acc
 LDFLAGS_VERBOSE := -v
 LDFLAGS_COVERAGE :=
 
 # Start with a blank LIBS
-LIBS := -L/opt/nvidia/hpc_sdk/Linux_x86_64/20.9/comm_libs/openmpi/openmpi-3.1.5/lib/ 
-LIBS += -L/opt/netcdf/4.7.4/NVHPC/lib64/ 
+LIBS := -L/opt/mpich/4.1.2/NVHPC/23.7/lib/ 
+LIBS += -L/opt/netcdf/4.9.2/NVHPC/23.7/lib64/ 
 #LIBS += -L/usr/lib/x86_64-linux-gnu/hdf5/serial
 #LIBS += -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz -lmpi -lmpi_mpifh
-LIBS += -lnetcdff -lnetcdf -lz -lmpi -lmpi_mpifh -lopen-pal -lopen-rte
+LIBS += -lnetcdff -lnetcdf -lz -lmpi #-lmpi_mpifh -lopen-pal -lopen-rte
 
 # Get compile flags based on target macros.
 ifdef REPRO
@@ -168,15 +170,15 @@ FFLAGS += $(FFLAGS_OPENMP)
 LDFLAGS += $(LDFLAGS_OPENMP)
 endif
 
+ifdef OPENMPGPU
+CFLAGS += $(CFLAGS_OPENMP)
+FFLAGS += $(FFLAGS_OPENMPGPU)
+LDFLAGS += $(LDFLAGS_OPENMPGPU)
+endif
+
 ifdef OPENACC
 #CFLAGS += $(CFLAGS_OPENMP)
 FFLAGS += $(FFLAGS_OPENACC)
-LDFLAGS += $(LDFLAGS_OPENACC)
-endif
-
-ifdef OPENACC_managed
-#CFLAGS += $(CFLAGS_OPENMP)
-FFLAGS += $(FFLAGS_OPENACC_managed)
 LDFLAGS += $(LDFLAGS_OPENACC)
 endif
 
