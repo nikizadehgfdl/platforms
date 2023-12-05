@@ -6,10 +6,10 @@
 ############
 # Commands Macros
 ############
-FC = mpiifort
-CC = mpiicc
-CXX = mpiicpc
-LD = mpiifort
+FC = mpif90
+CC = mpicc
+CXX = mpicpc
+LD = mpif90
 
 #######################
 # Build target macros
@@ -190,10 +190,10 @@ LDFLAGS += $(LDFLAGS_COVERAGE) $(PROF_DIR)
 endif
 
 FFLAGS += -I/apps/netcdf/4.6.1/intel/16.1.150/include 
-FFLAGS += -I/apps/intel/impi/2019.8.254/intel64/include 
+FFLAGS += -I/apps/oneapi/mpi/2021.5.1/include 
 LIBS := $(shell nc-config --libs) $(shell pkg-config --libs mpich2-f90)
 LDFLAGS += $(LIBS)
-LDFLAGS += -L/apps/intel/impi/2019.8.254/intel64/lib 
+LDFLAGS += -L/apps/oneapi/mpi/2021.5.1/lib 
 LDFLAGS += -lmpi
 LDFLAGS += -lnetcdf -lnetcdff
 LDFLAGS += -lm 

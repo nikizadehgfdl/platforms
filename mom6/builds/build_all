@@ -17,3 +17,5 @@
 source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230501
 ./linux-build.bash -m lscamd50 -p intel22 -t repro -f mom6sis2
 source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel22/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscamd50-intel22.repro.n1.20230919
+./linux-build.bash -m awscloud  -p intel22 -t repro -f mom6sis2
+source ../../../builds/awscloud/intel22.env ; srun -n 16 ../../../builds/build/awscloud-intel22/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud-intel22.repro.n16
