@@ -12,7 +12,7 @@
 	url = https://github.com/NOAA-GFDL/atmos_null.git
 [submodule "mom6/src/land_null"]
 	path = mom6/src/land_null
-	url = https://github.com/NOAA-GFDL/land_null.git
+	url = https://github.com/nikizadehgfdl/land_null.git
 [submodule "mom6/src/coupler"]
 	path = mom6/src/coupler
 	url = https://github.com/NOAA-GFDL/coupler.git

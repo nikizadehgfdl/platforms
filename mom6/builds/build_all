@@ -14,8 +14,12 @@
 ./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-stdpar -f mom6sis2
 ./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltOMPGPU -f mom6sis2
 ./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltACC -f mom6sis2
-source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230501
+source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230501
 ./linux-build.bash -m lscamd50 -p intel22 -t repro -f mom6sis2
-source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel22/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscamd50-intel22.repro.n1.20230919
+source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel22/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-intel22.repro.n1.20230919
+./linux-build.bash -m lscamd50 -p intel24 -t repro -f mom6sis2
+source ../../../builds/lscamd50/intel24.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel24/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-intel24.repro.n1.20231130
+./linux-build.bash -m lscamd50 -p nvhpc23.7 -t repro -f mom6sis2
+source ../../builds/lscamd50/nvhpc23.7.env ; mpirun -n 4 ../../builds/build/lscamd50-nvhpc23.7//ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-nvhpc23.7.repro.n4.20231205
 ./linux-build.bash -m awscloud  -p intel22 -t repro -f mom6sis2
 source ../../../builds/awscloud/intel22.env ; srun -n 16 ../../../builds/build/awscloud-intel22/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud-intel22.repro.n16
