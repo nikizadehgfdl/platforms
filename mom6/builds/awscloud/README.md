@@ -73,3 +73,6 @@ sbatch myscript.sbatch
 
 squeue
 ```
+## Notes
+- I did not notice any substantial change in timing when using /lustre v /contrib as workdir.
+- The interactive run on controller is as fast as slurm batch job to compute node for small core counts (<10). But for larger core counts it is faster to submit to compute.
