@@ -8,6 +8,7 @@ conda list --explicit > conda_spec_platforms.txt
 To make a conda environment consisting packages in this list we do:
 ```
 module load miniconda
-conda create --name platforms --file path/conda_spec_platforms.txt
-source activate platforms
+conda create --name platforms --file platforms/samples/python/conda_spec_platforms.txt
+source activate [PATH_TO_]platforms
+
 ```
