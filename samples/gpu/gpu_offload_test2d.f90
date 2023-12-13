@@ -283,6 +283,14 @@ if(docon) then
    subname='benchmark2d2_docon_swapij'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=1 
+   call benchmark2d2_docon_subinloop(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_docon_subinloop'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 endif
 
    deallocate (A, y0, A2)
@@ -809,6 +817,67 @@ subroutine benchmark2d1_docon(nthread, iter_max, m, n, A)
      enddo
   enddo
 end subroutine benchmark2d1_docon
+
+!Try to use a pure subroutine/function inside the do concurrent loops.
+!For some reason nvfortran compiler requires module/interface definitions 
+!for the pure functions used in do concurrent construct!!
+!It also requires the silly $acc directives and won't compile without them!!
+subroutine benchmark2d2_docon_subinloop(nthread, iter_max, m, n, A)
+  use elems
+  integer, intent(in) :: nthread, iter_max, m, n
+  real*8, dimension(0:m-1,0:n-1), intent(inout) :: A
+  real*8, dimension(0:m-1,0:n-1) :: AN
+  integer :: iter
+  iter=0
+  do while (iter < iter_max)
+    do concurrent(j=1:n-2,i=1:m-2)
+       !AN(i,j) = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+       call average(A,m,n,i,j,AN(i,j))
+    enddo
+    do concurrent(j=1:n-2,i=1:m-2)
+      A(i,j) = elemij(AN,m,n,i,j)
+    enddo
+    iter = iter+1
+  enddo
+end subroutine benchmark2d2_docon_subinloop
+
+pure function elemij(A,m,n,i,j)
+!$acc routine(elemij) seq
+  real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+  integer, intent(in) :: m,n,i,j
+  real*8 :: elemij
+  elemij = A(i,j)
+end function  
+
+
+pure subroutine average(A,m,n,i,j,avgij)
+!$acc routine(average) seq
+  real*8, intent(out) :: avgij
+  real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+  integer, intent(in) :: i, j, m, n
+  avgij = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
+end subroutine average  
+
+!For some reason nvfortran compiler requires module/interface definitions 
+!for the pure functions used in do concurrent construct!!
+!It also requires the silly $acc directives and won't compile without them!!
+module elems
+  interface
+    pure subroutine average(A,m,n,i,j,avgij)
+!$acc routine(average) seq
+      real*8, intent(out) :: avgij
+      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+      integer, intent(in) :: i, j, m, n
+    end subroutine average  
+    pure function elemij(A,m,n,i,j)
+!$acc routine(elemij) seq
+      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+      integer, intent(in) :: m,n,i,j
+      real*8 :: elemij
+    end function  
+  end interface
+end module
+
 !Some results
 !On Intel devcloud platform on 12/22/2022
 !-O0
