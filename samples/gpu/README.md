@@ -32,8 +32,24 @@ Note the great speedup of gpu v cpu (~23x)  by offloding these simple loops to G
 For more details see (the accompanying Jupyter notebook)[https://github.com/nikizadehgfdl/platforms/blob/master/samples/gpu/gpu_offload_guide.ipynb].
 
 ##### Notes on AWS cloud platform
-After adding a GPU partition to your cluster and bringing up the cluster and logging into it,
-first try to install the nvhpc compiler I followed the instructions (here)[https://docs.nvidia.com/hpc-sdk//hpc-sdk-container/index.html#ngc-singularity].
+- Add a GPU partition to your cluster and bringing up the cluster and logging into the controller.
+- Get a session on the GPU attached partition
+```
+salloc
+... wait for it, should return with something like ...
+salloc: Granted job allocation 2
+salloc: Waiting for resource configuration
+salloc: Nodes nikizadeh-nzcacobaltgpuoffloadcopyg3-00005-1-0001 are ready for job
+```
+- Login to the specified node above
+```
+ssh nikizadeh-nzcacobaltgpuoffloadcopyg3-00005-1-0001
+```
+- Make sure the GPU is available and note its model
+```
+nvidia_smi
+```
+- Install the nvhpc compiler (I followed the instructions at [https://docs.nvidia.com/hpc-sdk//hpc-sdk-container/index.html#ngc-singularity]).
 ```
 cd $HOME
 export SINGULARITY_TMPDIR=$HOME/tmpdir
@@ -41,13 +57,13 @@ singularity build nvhpc-23.11-devel.sif docker://nvcr.io/nvidia/nvhpc:23.11-deve
 #save the image somewhere (semi)permanent. $HOME is ephemeral.
 cp nvhpc-23.11-devel.sif /contrib/$USER/singularity/
 ```
-Then shell into the singularity image and make sure the nvhpc compiler is available
+- Shell into the singularity image and make sure the nvhpc compiler is available
 ```
 singularity shell --nv nvhpc-23.11-devel.sif
 Singularity> which nvfortran     
 /opt/nvidia/hpc_sdk/Linux_x86_64/23.11/compilers/bin/nvfortran
 ```
-Clone the platforms repo and compile and run the test
+- Clone the platforms repo and compile and run the test
 ```
 git clone git@github.com:nikizadehgfdl/platforms.git; cd platforms/samples/gpu/
 nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d
