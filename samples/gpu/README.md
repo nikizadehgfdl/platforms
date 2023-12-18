@@ -11,6 +11,9 @@ The following is a sample of the output of this test on a machine with a V100 Nv
 Wed Dec 13 15:32:47 EST 2023
      subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
      size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+     100000000   367.745    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_cpu
+     100000000   230.126    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu
+     100000000  3261.778    2000    0.000066406416776    0.001709011693696    2     benchmark2d2_omp_cpu_swapij
      100000000    62.243    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
      100000000    55.799    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2
      100000000     9.636    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_teams
@@ -25,7 +28,8 @@ Wed Dec 13 15:32:47 EST 2023
      100000000     8.819    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
      100000000     8.858    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_subinloop
 ```
-For more details see (the accompanying Jupyter notebook)[https://github.com/nikizadehgfdl/platforms/blob/master/samples/gpu/gpu_offload_guide.ipynb]
+Note the great speedup of gpu v cpu (~23x)  by offloding these simple loops to GPU are only for proof of concept. Not all loops can be so designed to be perfectly optimizable/vectorizable by the compiler. 
+For more details see (the accompanying Jupyter notebook)[https://github.com/nikizadehgfdl/platforms/blob/master/samples/gpu/gpu_offload_guide.ipynb].
 
 ##### Notes on AWS cloud platform
 After adding a GPU partition to your cluster and bringing up the cluster and logging into it,
@@ -56,5 +60,7 @@ Here's a sample output on a g2 platfrom (Tesla M60)
 ```
 Note that on older GPUs/cuda (like g2 above) the openmp offload might error out as shown below and you might have to delete all subroutines except "do concurrent" ones in 
 gpu_offload_test2d.f90 in order to be able to run these tests.
-
+```
+NVFORTRAN-S-0155-Compiler failed to translate accelerator region (see -Minfo messages): OpenMP GPU Offload is available only on systems with NVIDIA GPUs with compute capability '>= cc70' (gpu_offload_test2d.f90: 873)
+```
 
