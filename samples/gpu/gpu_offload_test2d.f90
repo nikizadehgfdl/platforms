@@ -50,6 +50,26 @@
 !     100000000     5.242    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
 !     100000000     5.230    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
 
+!For some reason nvfortran compiler requires module/interface definitions 
+!for the pure functions used in do concurrent construct!!
+!It also requires the silly $acc directives and won't compile without them!!
+module elems
+  interface
+    pure subroutine average(A,m,n,i,j,avgij)
+!$acc routine(average) seq
+      real*8, intent(out) :: avgij
+      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+      integer, intent(in) :: i, j, m, n
+    end subroutine average  
+    pure function elemij(A,m,n,i,j)
+!$acc routine(elemij) seq
+      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
+      integer, intent(in) :: m,n,i,j
+      real*8 :: elemij
+    end function  
+  end interface
+end module
+
 program test_omp
   implicit none
   include 'omp_lib.h'        
@@ -857,26 +877,6 @@ pure subroutine average(A,m,n,i,j,avgij)
   integer, intent(in) :: i, j, m, n
   avgij = 0.25*(A(i-1,j)+A(i+1,j)+A(i,j-1)+A(i,j+1))
 end subroutine average  
-
-!For some reason nvfortran compiler requires module/interface definitions 
-!for the pure functions used in do concurrent construct!!
-!It also requires the silly $acc directives and won't compile without them!!
-module elems
-  interface
-    pure subroutine average(A,m,n,i,j,avgij)
-!$acc routine(average) seq
-      real*8, intent(out) :: avgij
-      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
-      integer, intent(in) :: i, j, m, n
-    end subroutine average  
-    pure function elemij(A,m,n,i,j)
-!$acc routine(elemij) seq
-      real*8, dimension(0:m-1,0:n-1), intent(in) :: A
-      integer, intent(in) :: m,n,i,j
-      real*8 :: elemij
-    end function  
-  end interface
-end module
 
 !Some results
 !On Intel devcloud platform on 12/22/2022
