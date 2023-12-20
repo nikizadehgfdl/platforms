@@ -100,3 +100,27 @@ Sample output on a AWS g2 platfrom (Tesla M60) (cannot do openmp offload)
      100000000    53.405    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
 ```
 
+### Run gpu tests in container on AWS cloud
+- Build the container, this could be done on the controller node
+```
+sudo singularity build platforms_gputest_nvidia.sif platforms/samples/gpu/platforms_gputest_nvidia.def
+```
+- Run the container, this to be on the node with gpu attached and nvidia-smi functioning (via salloc)
+```
+singularity run --nv platforms_gputest_nvidia.sif gpu_offload_test2d
+     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+     100000000    57.680    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+     100000000    52.067    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2
+     100000000     8.919    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_teams
+     100000000     8.897    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_loop
+     100000000    12.531    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+     100000000    12.572    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2
+     100000000    54.633    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_teams
+     100000000    55.778    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_loop
+     100000000    14.495    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+     100000000    13.037    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+     100000000     8.892    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+     100000000     8.894    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+     100000000     8.931    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_subinloop
+```
