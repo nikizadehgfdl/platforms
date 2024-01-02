@@ -82,9 +82,9 @@ sudo singularity build  sing_build_nvhpc_stack.sif platforms/mom6/builds/awsclou
 sudo singularity build --sandbox sing_build_nvhpc23.7_netcdf_sandbox  sing_build_nvhpc_stack.sif
 [sudo] singularity shell --nv --writable sing_build_nvhpc23.7_netcdf_sandbox/
 Singularity> git clone --recursive https://github.com/nikizadehgfdl/platforms.git
-Singularity> cd platforms/mom6/builds/; ./linux-build.bash -m awscloud -p nvhpc23.11 -t repro -f mom6sis2
+Singularity> cd platforms/mom6/builds/; ./linux-build.bash -m awscloud -p nvhpc23.7 -t repro -f mom6sis2
 Singularity> cd ../MOM6SIS2_experiments/; ./get_input_datasets
 Singularity> cd MOM6SIS2COBALT.single_column
-Singularity> source ../../builds/awscloud/nvhpc23.11.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.11/ocean_ice/repro/MOM6SIS2
+Singularity> source ../../builds/awscloud/nvhpc23.7.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.7/ocean_ice/repro/MOM6SIS2
 #need to use mpirun --allow-run-as-root only if you shelled in with sudo
 ```
