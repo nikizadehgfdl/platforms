@@ -76,3 +76,8 @@ squeue
 ## Notes
 - I did not notice any substantial change in timing when using /lustre v /contrib as workdir.
 - The interactive run on controller is as fast as slurm batch job to compute node for small core counts (<10). But for larger core counts it is faster to submit to compute.
+- To use nvhpc in a singularity build try  
+```
+sudo singularity build  sing_build_nvhpc_stack.sif platforms/mom6/builds/awscloud/sing_build_nvhpc23.7_netcdf.def
+sudo singularity build --sandbox sing_build_nvhpc23.7_netcdf_sandbox  sing_build_nvhpc_stack.sif
+```
