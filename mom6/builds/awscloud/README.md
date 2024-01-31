@@ -78,13 +78,18 @@ squeue
 - The interactive run on controller is as fast as slurm batch job to compute node for small core counts (<10). But for larger core counts it is faster to submit to compute.
 - To use nvhpc in a singularity build try  
 ```
-sudo singularity build  sing_build_nvhpc_stack.sif platforms/mom6/builds/awscloud/sing_build_nvhpc23.7_netcdf.def
-sudo singularity build --sandbox sing_build_nvhpc23.7_netcdf_sandbox  sing_build_nvhpc_stack.sif
-[sudo] singularity shell --nv --writable sing_build_nvhpc23.7_netcdf_sandbox/
+export SINGULARITY_TMPDIR=$HOME/tmpdir
+sudo singularity build  sing_build_nvhpc23.7_netcdff_redo.sif /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/sing_build_nvhpc23.7_netcdff_redo.def
+sudo singularity build --sandbox sing_build_nvhpc23.7_netcdff_redo_sandbox sing_build_nvhpc23.7_netcdff_redo.sif
+[sudo] singularity shell --nv --writable sing_build_nvhpc23.7_netcdff_redo_sandbox
+
 Singularity> git clone --recursive https://github.com/nikizadehgfdl/platforms.git
 Singularity> cd platforms/mom6/builds/; ./linux-build.bash -m awscloud -p nvhpc23.7 -t repro -f mom6sis2
 Singularity> cd ../MOM6SIS2_experiments/; ./get_input_datasets
 Singularity> cd MOM6SIS2COBALT.single_column
 Singularity> source ../../builds/awscloud/nvhpc23.7.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.7/ocean_ice/repro/MOM6SIS2
 #need to use mpirun --allow-run-as-root only if you shelled in with sudo
+#mpirun worked on the P3 controller
+#mpirun did not work after landing on a gpu partition  via salloc on P3
+#So, how to run on a GPU attached patition?
 ```
