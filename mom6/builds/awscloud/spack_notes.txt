@@ -1,0 +1,224 @@
+[Niki.Zadeh@nzcacobaltgpuoffloadcopyp4-3 Niki.Zadeh]$ cd /contrib/Niki.Zadeh
+$ git clone --depth=100 --branch=releases/v0.21 https://github.com/spack/spack
+Cloning into 'spack'...
+remote: Enumerating objects: 20012, done.
+remote: Counting objects: 100% (20012/20012), done.
+remote: Compressing objects: 100% (10955/10955), done.
+Receiving objects: 100% (20012/20012), 13.41 MiB | 20.88 MiB/s, done.
+remote: Total 20012 (delta 2229), reused 13236 (delta 1715), pack-reused 0
+Resolving deltas: 100% (2229/2229), done.
+Checking out files: 100% (11002/11002), done.
+$ export SPACK_USER_CACHE_PATH=/contrib/Niki.Zadeh/.spack
+$ . spack/share/spack/setup-env.sh
+$##spack bootstrap now#don't do it unless you have to. don't know what it does. 
+$ spack env create nvidia
+$ spack env activate nvidia
+$ spack add gmake
+$ spack install
+$ spack compiler remove -a intel
+$ module load gnu/9.2.0
+$ which gcc
+Manually add gcc to compilers, spack compiler find does not find it
+$ cat /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/spack.yaml
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  - gmake
+  - gcc@13.2.0
+  view: true
+  concretizer:
+    unify: true
+  compilers:
+  - compiler:
+      spec: gcc@=9.2.0
+      paths:
+        cc: /apps/gnu/gcc-9.2.0/bin/gcc
+        cxx: /apps/gnu/gcc-9.2.0/bin/c++
+        f77: /apps/gnu/gcc-9.2.0/bin/gfortran
+        fc: /apps/gnu/gcc-9.2.0/bin/gfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: [] 
+
+$ spack add gcc@13.2.0
+$ spack install
+#Added gcc13 to spack.yaml
+$ cat  /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/spack.yaml
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  - gmake
+  - gcc@13.2.0
+  - nvhpc%gcc@13.2.0
+  view: true
+  concretizer:
+    unify: true
+  compilers:
+  - compiler:
+      spec: gcc@=13.2.0
+      paths:
+        cc: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/bin/gcc
+        cxx: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/bin/c++
+        f77: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/bin/gfortran
+        fc: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/bin/gfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@=9.2.0
+      paths:
+        cc: /apps/gnu/gcc-9.2.0/bin/gcc
+        cxx: /apps/gnu/gcc-9.2.0/bin/c++
+        f77: /apps/gnu/gcc-9.2.0/bin/gfortran
+        fc: /apps/gnu/gcc-9.2.0/bin/gfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: [] 
+
+$ which gcc
+/contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/bin/gcc
+$ gcc --version
+gcc (Spack GCC) 13.2.0
+
+$ spack add nvhpc
+$ spack install
+$ which nvfortran
+/contrib/Niki.Zadeh/spack/var/spack/environments/nvidia/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvfortran
+
+$ cd /contrib/Niki.Zadeh/
+$ export SPACK_USER_CACHE_PATH=/contrib/Niki.Zadeh/.spack
+$ . spack/share/spack/setup-env.sh
+$ spack env list
+$ spack env activate nvidia
+#
+#Don't know why I did these!!!
+#I deleted the gcc9.2.0 from spack.yaml
+#I think the following ruined my env. Don't do this!
+###$ s pack remove gmake
+###$ s pack concretize --force
+#
+$ cd /contrib/Niki.Zadeh/
+$ module load gcc-9.2.0 ;  which gcc
+/apps/gnu/gcc-9.2.0/bin/gcc
+$ export SPACK_USER_CACHE_PATH=/contrib/Niki.Zadeh/.spack
+$ . spack/share/spack/setup-env.sh
+$ spack env list
+$ spack env activate -p nvidia3
+$ spack add gmake ; spack install
+$ spack add nvhpc ; spack install
+#Manually added nvhpc compiler to spack.yaml
+$ cat /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/spack.yaml  
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  - gmake
+  - nvhpc
+  view: true
+  concretizer:
+    unify: true
+  compilers:
+  - compiler:
+      spec: gcc@=9.2.0
+      paths:
+        cc: /apps/gnu/gcc-9.2.0/bin/gcc
+        cxx: /apps/gnu/gcc-9.2.0/bin/c++
+        f77: /apps/gnu/gcc-9.2.0/bin/gfortran
+        fc: /apps/gnu/gcc-9.2.0/bin/gfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: nvhpc@=23.9
+      paths:
+        cc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvcc
+        cxx: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvc++
+        f77: /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvfortran
+        fc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: []
+
+$ spack add m4 ; spack install #needed to build netcdf-c
+
+###again
+spack env create nvhpc237
+spack env activate -p nvhpc237
+cp /contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/spack.yaml /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/spack.yaml
+#change spec nvhpc to nvhpc@23.7
+#remove the nvhpc compiler from file
+module load gnu/9.2.0
+spack install
+despacktivate 
+#Add the location of nvhpc23.7 compilers to /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/spack.yaml
+cat /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/spack.yaml
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs:
+  - gmake
+  - nvhpc@23.7
+  - m4
+  view: true
+  concretizer:
+    unify: true
+  compilers:
+  - compiler:
+      spec: gcc@=9.2.0
+      paths:
+        cc: /apps/gnu/gcc-9.2.0/bin/gcc
+        cxx: /apps/gnu/gcc-9.2.0/bin/c++
+        f77: /apps/gnu/gcc-9.2.0/bin/gfortran
+        fc: /apps/gnu/gcc-9.2.0/bin/gfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: nvhpc@=23.7
+      paths:
+        cc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/.spack-env/view/Linux_x86_64/23.7/compilers/bin/nvcc
+        cxx: /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/.spack-env/view/Linux_x86_64/23.7/compilers/bin/nvc++
+        f77: /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/.spack-env/view/Linux_x86_64/23.7/compilers/bin/nvfortran
+        fc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/.spack-env/view/Linux_x86_64/23.7/compilers/bin/nvfortran
+      flags: {}
+      operating_system: centos7
+      target: any
+      modules: []
+      environment: {}
+      extra_rpaths: []
+
+spack env activate -p nvhpc237
+which nvfortran
+/contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/spack.yaml
