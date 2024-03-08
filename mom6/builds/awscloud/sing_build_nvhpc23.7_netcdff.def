@@ -79,11 +79,16 @@ Stage: build
 ## make check
   make install
   cd ..
+
+  apt-get update
+  apt-get install csh
   #cleanup
   pwd
   \rm -rf hdf5-${h_ver} hdf5-${h_ver}.tar.gz v${c_ver}.tar.gz netcdf-c-${c_ver}
   \rm -rf netcdf-fortran-${f_ver} netcdf-fortran-${f_ver}.tar.gz
   \rm -rf /root/netcdf-c-4.8.1 /root/v4.8.1.tar.gz /root/elems.mod /root/gpu_offload_test2d
-  apt-get update
-  apt-get install csh
+  #Remove files and dirs not needed for our purposes to shrink the size of .sif file
+  \rm -rf /opt/nvidia/hpc_sdk/Linux_x86_64/23.7/math_libs/11.*  
+  \rm -rf /opt/nvidia/hpc_sdk/Linux_x86_64/23.7/comm_libs/11.*
+  \rm -rf /opt/nvidia/hpc_sdk/Linux_x86_64/23.7/profilers
    
