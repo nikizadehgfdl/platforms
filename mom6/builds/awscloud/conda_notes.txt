@@ -1,0 +1,9 @@
+cd /contrib/Niki.Zadeh/opt ; mkdir -p miniconda3; cd miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+bash miniconda.sh -b -u -p .
+#rm -rf miniconda.sh
+/contrib/Niki.Zadeh/opt/miniconda3/bin/conda init bash
+conda env create -n platforms -f platforms/samples/python/platforms.yml
+#
+/contrib/Niki.Zadeh/opt/miniconda3/bin/conda init bash
+conda activate platforms

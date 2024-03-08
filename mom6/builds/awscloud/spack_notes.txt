@@ -222,3 +222,4 @@ spack:
 spack env activate -p nvhpc237
 which nvfortran
 /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/spack.yaml
+#Could not install hdf5: libatomic.so.1: cannot open shared object file

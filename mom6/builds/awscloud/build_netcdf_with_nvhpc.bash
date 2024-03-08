@@ -2,13 +2,14 @@
   which nvfortran
   #nvfortran -mp=gpu -stdpar /source/platforms/samples/gpu/gpu_offload_test2d.f90 -o gpu_offload_test2d
   #
-  export installDir='/contrib/Niki.Zadeh/opt'
+  export installDir='/contrib/Niki.Zadeh/opt/nvhpc239'
   #Build hdf5
-  export CC='/contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/mpicc'
-  export FC='/contrib/Niki.Zadeh/spack/var/spack/environments/nvidia3/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/mpif90'
+  export CC='/contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/mpicc'
+  export FC='/contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/mpif90'
+  export LD_LIBRARY_PATH=/contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc237/.spack-env/view/Linux_x86_64/23.7/comm_libs/openmpi/openmpi-3.1.5/lib:${LD_LIBRARY_PATH}
 
   export h_ver='1.12.2'
-  export HDF5_ROOT=${installDir}/hdf5/${h_ver}/NVHPC
+  export HDF5_ROOT=${installDir}/hdf5_${h_ver}
 
   export CPP='cpp -E'
   export CXXCPP='cpp -E'
@@ -27,6 +28,7 @@
 ## cd /contrib/Niki.Zadeh/opt/hdf5/1.12.2;  ln -s ../../hdf5-1.12.2/hdf5 NVHPC
 #
 #  cd ..
+#exit 0
   #cleanup
 #  \rm -rf hdf5-${h_ver} hdf5-${h_ver}.tar.gz
   #
@@ -47,13 +49,13 @@
 #  \rm -rf netcdf-c-${c_ver}
 #  tar xf  v${c_ver}.tar.gz
 #  cd   netcdf-c-${c_ver}
-#  ./configure --prefix=${installDir}/netcdf/${c_ver}/NVHPC/${1} --enable-shared --disable-dap --enable-netcdf-4 \
-#                  --libdir=${installDir}/netcdf/${c_ver}/NVHPC/${1}/lib64 --disable-libxml2
+#  ./configure --prefix=${installDir}/netcdf_${c_ver} --enable-shared --disable-dap --enable-netcdf-4 \
+#              --libdir=${installDir}/netcdf_${c_ver}/lib64 --disable-libxml2
 #  make
 ## make check
 #  make install
 #  cd ..
-##  exit 0
+#  exit 0
   #Build netcdf-fortran
   export f_ver='4.6.1'
 #  wget https://downloads.unidata.ucar.edu/netcdf-fortran/4.6.1/netcdf-fortran-4.6.1.tar.gz
@@ -65,9 +67,11 @@
   which nvfortran
   pwd
   sleep 5
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${installDir}/netcdf/${c_ver}/NVHPC/${1}/lib64/
-  ./configure --prefix=${installDir}/netcdf/${c_ver}/NVHPC/${1} --libdir=${installDir}/netcdf/${c_ver}/NVHPC/${1}/lib64/ \
-                  CPPFLAGS=-I${installDir}/netcdf/${c_ver}/NVHPC/${1}/include/ LDFLAGS=-L${installDir}/netcdf/${c_ver}/NVHPC/${1}/lib64
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${installDir}/netcdf_${c_ver}/lib64/
+  ./configure --prefix=${installDir}/netcdf_${c_ver} \
+              --libdir=${installDir}/netcdf_${c_ver}/lib64/ \
+            CPPFLAGS=-I${installDir}/netcdf_${c_ver}/include/ \
+             LDFLAGS=-L${installDir}/netcdf_${c_ver}/lib64
   make
 ## make check
   make install

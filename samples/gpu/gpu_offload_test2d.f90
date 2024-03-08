@@ -49,7 +49,26 @@
 !     100000000     8.161    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
 !     100000000     5.242    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
 !     100000000     5.230    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
-
+!Parallelworks AWS cloud on 02/29/2024
+!     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+!     size        time(s) iterations initial_sum          final_sum          #ompthr    subroutine
+!     100000000   785.994    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_cpu
+!     100000000  1117.255    2000    0.000066406416776    0.001709011693696    2      benchmark2d2_omp_cpu
+!     100000000  7387.708    2000    0.000066406416776    0.001709011693696    2      enchmark2d2_omp_cpu_swapij
+!     100000000   235.601    2000    0.000066406416776    0.001709011693696    4      benchmark2d2_omp_cpu
+!     100000000    57.886    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu
+!     100000000    52.048    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_collapse2
+!     100000000     8.923    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_collapse2_teams
+!     100000000     8.903    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_collapse2_loop
+!     100000000    12.550    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_swapij
+!     100000000    12.526    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_swapij_collapse2
+!     100000000    53.795    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_swapij_collapse2_teams
+!     100000000    55.267    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_omp_gpu_swapij_collapse2_loop
+!     100000000    14.557    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_acc_gpu
+!     100000000    13.010    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_acc_gpu_swapij
+!     100000000    10.115    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_docon
+!     100000000    10.121    2000    0.000066406416776    0.001709011693696    1      benchmark2d2_docon_swapij
+!
 !For some reason nvfortran compiler requires module/interface definitions 
 !for the pure functions used in do concurrent construct!!
 !It also requires the silly $acc directives and won't compile without them!!
@@ -84,7 +103,7 @@ program test_omp
   integer :: nthread, nthreads,nthr
   character (len = 50) :: subname
   logical :: simple_nonlinear=.false.
-  logical :: omp_cpu=.false.
+  logical :: omp_cpu=.true.
   logical :: docon=.true.
   nthread = 1
 
@@ -207,6 +226,13 @@ if(omp_cpu) then !The cpu will be too slow (1000x) for large size arrays. Avoid 
    nthread=2 
    call benchmark2d2_omp_cpu_swapij(nthread, iter_max, m, n, A2)
    subname='benchmark2d2_omp_cpu_swapij'
+!$   run_time = omp_get_wtime() - run_time;
+   write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
+   A2(:,:)=A(:,:)
+!$   run_time = omp_get_wtime()
+   nthread=4 
+   call benchmark2d2_omp_cpu(nthread, iter_max, m, n, A2)
+   subname='benchmark2d2_omp_cpu'
 !$   run_time = omp_get_wtime() - run_time;
    write(*,'(i14,f10.3,i8,f21.15,f21.15,i5,5X,A)')  n*m,run_time,iter_max,sum0,sum(A2)/n/m,nthread,trim(subname)
 endif
