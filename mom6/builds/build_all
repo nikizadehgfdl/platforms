@@ -21,5 +21,60 @@ source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/
 source ../../../builds/lscamd50/intel24.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel24/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-intel24.repro.n1.20231130
 ./linux-build.bash -m lscamd50 -p nvhpc23.7 -t repro -f mom6sis2
 source ../../builds/lscamd50/nvhpc23.7.env ; mpirun -n 4 ../../builds/build/lscamd50-nvhpc23.7//ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-nvhpc23.7.repro.n4.20231205
+#
+#AWS cloud
+#
 ./linux-build.bash -m awscloud  -p intel22 -t repro -f mom6sis2
 source ../../../builds/awscloud/intel22.env ; srun -n 16 ../../../builds/build/awscloud-intel22/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud-intel22.repro.n16
+#
+#G4 controler
+#
+cd /contrib/Niki.Zadeh/platforms/mom6/builds
+source /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/nvhpc23.9G4.env
+./linux-build.bash -m awscloud  -p nvhpc23.9_G4 -t repro -f mom6sis2
+cd /contrib/Niki.Zadeh/platforms/mom6/MOM6SIS2_experiments/MOM6SIS2COBALT.single_column/
+source /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/nvhpc23.9_G4.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.9_G4/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud.nvhpc23.9_G4.repro.n1.20240315.G4controller
+
+#G4 GPU node
+#G4controller  executable crashes on the GPU compute node
+#
+salloc
+salloc: Granted job allocation 4
+salloc: Waiting for resource configuration
+salloc: Nodes nikizadeh-nzcacobaltgpuoffloadcopyg4-00005-1-0001 are ready for job
+(base) [Niki.Zadeh@nzcacobaltgpuoffloadcopyg4-5 MOM6SIS2COBALT.single_column]$ ssh nikizadeh-nzcacobaltgpuoffloadcopyg4-00005-1-0001
+(base) [Niki.Zadeh@compute-0001 MOM6SIS2COBALT.single_column]$ 
+mpirun -n 1 ../../builds/build/awscloud-nvhpc23.9_G4/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud.nvhpc23.9_G4.repro.n1.20240315.GPUnode
+crashed
+mpirun noticed that process rank 0 with PID 0 on node nikizadeh-nzcacobaltgpuoffloadcopyg4-00005-1-0001 exited on signal 4 (Illegal instruction).
+#
+#build on G4 gpu node, mpirun gives the same error.
+#
+cd /contrib/Niki.Zadeh/platforms/mom6/builds
+./linux-build.bash -m awscloud  -p nvhpc23.9_G4_gpu -t repro -f mom6sis2
+cd /contrib/Niki.Zadeh/platforms/mom6/MOM6SIS2_experiments/MOM6SIS2COBALT.single_column/
+source /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/nvhpc23.9_G4_gpu.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.9_G4_gpu/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud.nvhpc23.9_G4_gpu.repro.n1.20240315.gpuNode
+
+#Could it be that we need to rebuild netcdf libs from scratch on gpu compute node??
+G4 controller: GenuineIntel, Intel(R) Xeon(R) Platinum 8124M CPU @ 3.00GHz
+G4 GPU node: AuthenticAMD, AMD EPYC 7R32 
+P3 controller: GenuineIntel, Intel(R) Xeon(R) Platinum 8124M CPU @ 3.00GHz
+
+#
+#P3
+#
+G4controller executable works on P3 controller
+ource /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/nvhpc23.9_G4.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc23.9_G4/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud.nvhpc23.9_G4.repro.n1.20240315.P3controller
+
+
+cd /contrib/Niki.Zadeh/platforms/mom6/builds
+./linux-build.bash -m awscloud  -p nvhpc23.9_P3 -t repro -f mom6sis2
+cd /contrib/Niki.Zadeh/platforms/mom6/MOM6SIS2_experiments/MOM6SIS2COBALT.single_column
+source /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/nvhpc23.9_P3.env;  mpirun -n 1 ../../builds/build/awscloud-nvhpc23.9_P3/ocean_ice/repro/MOM6SIS2 |& tee stdout.awscloud.nvhpc23.9_P3.repro.n1.20240315.controller
+mpirun noticed that process rank 0 with PID 13996 on node nikizadeh-nzcacobaltgpuoffloadcopyp3-00011-1-0001 exited on signal 4 (Illegal instruction).
+#Could it be that the netcdf was built on G4 node and does not work on P3?
+#
+#Rebuilt hdf/netcdf on the gpu node and recompiled using those libs. It worked!
+#
+./linux-build.bash -m awscloud  -p nvhpc239P3gpu -t repro -f mom6sis2
+source ../../builds/awscloud/nvhpc239P3gpu.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc239P3gpu/ocean_ice/repro/MOM6SIS2  |& tee stdout.awscloud.nvhpc239P3gpu.20240318.gpunode

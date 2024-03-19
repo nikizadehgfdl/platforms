@@ -6,7 +6,7 @@
 ############
 # Commands Macros
 ############
-COMPPATH = /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/
+COMPPATH = /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/
 FC = $(COMPPATH)/mpif90
 CC = $(COMPPATH)/mpicc
 LD = $(COMPPATH)/mpif90 $(MAIN_PROGRAM)
@@ -95,7 +95,7 @@ MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
 FPPFLAGS = $(INCLUDES)
 # Fortran Compiler flags for the NetCDF library
 #FPPFLAGS += -I/opt/openmpi/4.1.4/NVHPC/22.5/include
-FPPFLAGS += -I/contrib/Niki.Zadeh/opt/nvhpc239/netcdf_4.8.1/include
+FPPFLAGS += -I/contrib/Niki.Zadeh/opt/nvhpc239P3gpu/netcdf_4.8.1/include
 
 # Base set of Fortran compiler flags
 FFLAGS = -i4 -r8 -byteswapio -Mcray=pointer -Mcray=pointer -Mflushz -Mdaz -D_F2000 -DNO_QUAD_PRECISION
@@ -116,7 +116,7 @@ FFLAGS_OPENACC = -acc -ta=nvidia:managed -Minfo=accel
 CPPFLAGS = $(INCLUDES)
 #CPPFLAGS += -I/opt/openmpi/4.1.4/NVHPC/22.5/include
 # C Compiler flags for the NetCDF library
-CPPFLAGS += -I/contrib/Niki.Zadeh/opt/nvhpc239/netcdf_4.8.1/include
+CPPFLAGS += -I/contrib/Niki.Zadeh/opt/nvhpc239P3gpu/netcdf_4.8.1/include
 # Base set of C compiler flags
 CFLAGS = -DHAVE_GETTID
 
@@ -145,7 +145,7 @@ LDFLAGS_COVERAGE :=
 
 # Start with a blank LIBS
 #LIBS := -L/opt/mpich/4.1.2/NVHPC/23.7/lib/ 
-LIBS := -L/contrib/Niki.Zadeh/opt/nvhpc239/netcdf_4.8.1/lib64
+LIBS := -L/contrib/Niki.Zadeh/opt/nvhpc239P3gpu/netcdf_4.8.1/lib64
 #LIBS += -L/usr/lib/x86_64-linux-gnu/hdf5/serial
 #LIBS += -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz -lmpi -lmpi_mpifh
 LIBS += -lnetcdff -lnetcdf -lz #-lmpi #-lmpi_mpifh -lopen-pal -lopen-rte
