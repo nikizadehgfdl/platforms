@@ -64,8 +64,8 @@ if [[ $target =~ "prod" ]] ; then
    makeflags="$makeflags PROD=1"
 fi
 
-if [[ $target =~ "avx512" ]] ; then
-   makeflags="$makeflags PROD=1 AVX=512"
+if [[ $target =~ "avx2" ]] ; then
+   makeflags="$makeflags AVX=2"
 fi
 
 if [[ $target =~ "debug" ]] ; then
