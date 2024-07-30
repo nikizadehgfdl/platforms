@@ -76,77 +76,42 @@ squeue
 ## Notes
 - I did not notice any substantial change in timing when using /lustre v /contrib as workdir.
 - The interactive run on controller is as fast as slurm batch job to compute node for small core counts (<10). But for larger core counts it is faster to submit to compute.
-- To build required compilers, libraries, etc using spack
-- -Note that everything has to be done on the node with GPU attached since it is a different platform than the controller
-- -salloc and login to the compute/GPU  node
-- -Install spack
-cd /contrib/$USER
-git clone --depth=100 --branch=releases/v0.21 https://github.com/spack/spack
+
+### Using NVHPC compiler via Spack
+- Everything has to be done on the compute node with GPU attached since it is a different platform than the controller
+```
+salloc
+```
+ wait for the node to be allocated then ssh to the compute/GPU  node, e.g.,
+```
+(base) [Niki.Zadeh@nzcacobaltgpuoffloadcopyp3-11 ~]$ squeue 
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON) 
+                 6 compute_g marketpl Niki.Zad  R 59-22:12:04      1 nikizadeh-nzcacobaltgpuoffloadcopyp3-00011-1-0001 
+(base) [Niki.Zadeh@nzcacobaltgpuoffloadcopyp3-11 ~]$ ssh nikizadeh-nzcacobaltgpuoffloadcopyp3-00011-1-0001
+
+```
+
+- Activate Spack
+
+```
 export SPACK_USER_CACHE_PATH=/contrib/Niki.Zadeh/.spack
-. spack/share/spack/setup-env.sh
-spack env create nvhpc239P3gpu
+. /contrib/Niki.Zadeh/spack/share/spack/setup-env.sh
 spack env activate -p nvhpc239P3gpu
-cat /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/spack.yaml
-# This is a Spack Environment file.
-#
-# It describes a set of packages to be installed, along with
-# configuration settings.
-spack:
-  # add package specs to the `specs` list
-  specs:
-  - gmake
-  - nvhpc@23.9
-  - m4
-  view: true
-  concretizer:
-    unify: true
-  compilers:
-  - compiler:
-      spec: gcc@=9.2.0
-      paths:
-        cc: /apps/gnu/gcc-9.2.0/bin/gcc
-        cxx: /apps/gnu/gcc-9.2.0/bin/c++
-        f77: /apps/gnu/gcc-9.2.0/bin/gfortran
-        fc: /apps/gnu/gcc-9.2.0/bin/gfortran
-      flags: {}
-      operating_system: centos7
-      target: any
-      modules: []
-      environment: {}
-      extra_rpaths: []
-  - compiler:
-      spec: nvhpc@=23.9
-      paths:
-        cc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvcc
-        cxx: /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvc++
-        f77: /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvfortran
-        fc:  /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/compilers/bin/nvfortran
-      flags: {}
-      operating_system: centos7
-      target: any
-      modules: []
-      environment: {}
-      extra_rpaths: []
-
-module load gnu/9.2.0
-###You might need to first remove the nvhpc@=23.9 compiler section from the above file and add it back after the install step below
-spack install
-despacktivate
-####Add the location of nvhpc23.9 compilers to spack.yaml if you removed it
-spack env activate -p nvhpc239
-which nvfortran
-
-- Build and Install hdf5/netcdf using the new nvhpc compiler (you might want to do this in 3 steps hdf5,netcdf-c,netcdf-f if the whole script gives you trouble):
-/contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/build_netcdf_with_nvhpc_P3gpuNode.bash
+ls /contrib/Niki.Zadeh/spack/var/spack/environments/nvhpc239P3gpu/.spack-env/view/Linux_x86_64/23.9/comm_libs/mpi/bin/mpicc
+```
 
 - Build mom6sis2
+```  
 cd platforms/mom6/builds/ ; ./linux-build.bash -m awscloud  -p nvhpc239P3gpu -t repro-stdpar -f mom6sis2
+```
 - Run
+```
 cd platforms/mom6/MOM6SIS2_experiments/MOM6SIS2COBALT.single_column ; source ../../builds/awscloud/nvhpc239P3gpu.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc239P3gpu/ocean_ice/repro/MOM6SIS2  |& tee stdout.awscloud.nvhpc239P3gpu.20240318.gpunode
+```
 - Watch nvidia-smi while it runs
 
 
-- To use nvhpc in a singularity build try  
+#### Using NVHPC in a singularity build  
 ```
 export SINGULARITY_TMPDIR=$HOME/tmpdir
 sudo singularity build  sing_build_nvhpc23.7_netcdff_redo.sif /contrib/Niki.Zadeh/platforms/mom6/builds/awscloud/sing_build_nvhpc23.7_netcdff_redo.def
