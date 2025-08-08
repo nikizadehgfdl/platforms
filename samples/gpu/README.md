@@ -6,7 +6,10 @@ To compile and run do:
 ```
 nvfortran -mp=gpu -stdpar gpu_offload_test2d.f90 -o gpu_offload_test2d; ./gpu_offload_test2d
 ```
-The following is a sample of the output of this test on a machine with a V100 Nvidia GPU
+The following is a sample of the output of this test on a machine with a 
+
+
+##### Tesla V100-PCIE-32GB
 ```
 Wed Dec 13 15:32:47 EST 2023
      subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
@@ -31,7 +34,9 @@ Wed Dec 13 15:32:47 EST 2023
 Note the great speedup of gpu v cpu (~23x)  by offloding these simple loops to GPU are only for proof of concept. Not all loops can be so designed to be perfectly optimizable/vectorizable by the compiler. 
 For more details see (the accompanying Jupyter notebook)[https://github.com/nikizadehgfdl/platforms/blob/master/samples/gpu/gpu_offload_guide.ipynb].
 
-Sample timings on sellar with NVIDIA A100-PCIE-40GB
+Sample timings on sellar with 
+
+##### NVIDIA A100-PCIE-40GB
 
 ```
      subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
@@ -49,6 +54,30 @@ Sample timings on sellar with NVIDIA A100-PCIE-40GB
      100000000     5.167    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
      100000000     5.171    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
 ```
+
+Sample timings on ursa with 
+
+##### NVIDIA H100 NVL
+
+```
+     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+     100000000    14.659    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+     100000000    14.648    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2
+     100000000     4.472    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_teams
+     100000000     3.170    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_loop
+     100000000    10.639    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+     100000000    10.627    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2
+     100000000    10.788    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_teams
+     100000000    10.896    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_loop
+     100000000     2.657    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+     100000000     5.165    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+     100000000     3.175    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+     100000000     3.178    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+     100000000     3.269    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_subinloop
+```
+
+
 ##### Notes on AWS cloud platform
 - Add a GPU partition to your cluster and bringing up the cluster and logging into the controller.
 - Get a session on the GPU attached partition
