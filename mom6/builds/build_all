@@ -78,3 +78,10 @@ mpirun noticed that process rank 0 with PID 13996 on node nikizadeh-nzcacobaltgp
 #
 ./linux-build.bash -m awscloud  -p nvhpc239P3gpu -t repro -f mom6sis2
 source ../../builds/awscloud/nvhpc239P3gpu.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc239P3gpu/ocean_ice/repro/MOM6SIS2  |& tee stdout.awscloud.nvhpc239P3gpu.20240318.gpunode
+
+#
+#stellar
+#
+./linux-build.bash -m stellar -p intel22 -t repro-avx2  -f mom6sis2
+./linux-build.bash -m stellar -p nvhpc21.5 -t repro  -f mom6sis2
+./linux-build.bash -m stellar -p nvhpc21.5 -t repro-stdpar  -f mom6sis2
