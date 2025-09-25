@@ -31,6 +31,24 @@ Wed Dec 13 15:32:47 EST 2023
 Note the great speedup of gpu v cpu (~23x)  by offloding these simple loops to GPU are only for proof of concept. Not all loops can be so designed to be perfectly optimizable/vectorizable by the compiler. 
 For more details see (the accompanying Jupyter notebook)[https://github.com/nikizadehgfdl/platforms/blob/master/samples/gpu/gpu_offload_guide.ipynb].
 
+Sample timings on sellar with NVIDIA A100-PCIE-40GB
+
+```
+     subroutine Aij <-- (Ai-1,j + Ai+1,j + Ai,j-1 + Ai,j+1)/4
+     size        time(s) iterations initial_sum          final_sum        #ompthr    subroutine
+     100000000    22.627    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu
+     100000000    20.886    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2
+     100000000     6.355    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_teams
+     100000000     5.163    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_collapse2_loop
+     100000000    13.297    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij
+     100000000    13.292    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2
+     100000000    20.873    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_teams
+     100000000    20.986    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_omp_gpu_swapij_collapse2_loop
+     100000000     5.767    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu
+     100000000     7.865    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_acc_gpu_swapij
+     100000000     5.167    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon
+     100000000     5.171    2000    0.000066406416776    0.001709011693696    1     benchmark2d2_docon_swapij
+```
 ##### Notes on AWS cloud platform
 - Add a GPU partition to your cluster and bringing up the cluster and logging into the controller.
 - Get a session on the GPU attached partition

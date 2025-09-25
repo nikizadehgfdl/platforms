@@ -6,9 +6,10 @@
 ############
 # Commands Macros
 ############
-FC = mpif90
+FC = mpifort
 CC = mpicc
-LD = mpif90
+CXX = mpicxx
+LD = mpifort
 
 #######################
 # Build target macros
@@ -46,15 +47,13 @@ NETCDF =             # If value is '3' and CPPDEFS contains
                      # '-Duse_netCDF', then the additional cpp macro
                      # '-Duse_LARGEFILE' is added to the CPPDEFS macro.
 
-                     # A list of -I Include directories to be added to the
+INCLUDES =           # A list of -I Include directories to be added to the
                      # the compile command.
-INCLUDES := -I $(shell nf-config --includedir )
-#$(shell pkg-config --cflags yaml-0.1)
 
-                     # The Intel Instruction Set Archetecture (ISA) compile
-                     # option to use.
-ISA =
-AVX =
+#ISA = -xsse2         # The Intel Instruction Set Archetecture (ISA) compile
+ISA = -march=core-avx-i -qno-opt-dynamic-align
+                     # option to use.  If blank, than use the default SSE
+                     # settings for the host.  Current default is to use SSE2.
 
 COVERAGE =           # Add the code coverage compile options.
 
@@ -79,6 +78,8 @@ $(error Options DEBUG and TEST cannot be used together)
 endif
 endif
 
+MAKEFLAGS += --jobs=$(shell grep '^processor' /proc/cpuinfo | wc -l)
+
 # Required Preprocessor Macros:
 CPPDEFS += -Duse_netCDF
 
@@ -91,37 +92,17 @@ FPPFLAGS := -fpp -Wp,-w $(INCLUDES)
 FPPFLAGS += $(shell nf-config --fflags)
 
 # Base set of Fortran compiler flags
-FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -sox -traceback
+FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -traceback
 
-# Set the ISA (vectorization) as user defined or based on the target
-ifdef ISA
-ISA_OPT = $(ISA)
-ISA_REPRO = $(ISA)
-ISA_DEBUG = $(ISA)
-else
-ISA_OPT = -march=core-avx-i -qno-opt-dynamic-align
-ISA_REPRO = -march=core-avx-i -qno-opt-dynamic-align
-ISA_DEBUG = -march=core-avx-i -qno-opt-dynamic-align
-endif
-
-ifeq ($(AVX),2)
-ISA_OPT = -march=core-avx2 -qno-opt-dynamic-align
-ISA_REPRO = -march=core-avx2 -qno-opt-dynamic-align
-ISA_DEBUG = -march=core-avx2 -qno-opt-dynamic-align
-else
-ISA_OPT = -march=core-avx-i -qno-opt-dynamic-align
-ISA_REPRO = -march=core-avx-i -qno-opt-dynamic-align
-ISA_DEBUG = -march=core-avx-i -qno-opt-dynamic-align
-endif
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
-FFLAGS_OPT = -O3 -debug minimal -fp-model source $(ISA_OPT)
-FFLAGS_REPRO = -O2 -debug minimal -fp-model source $(ISA_REPRO)
-FFLAGS_DEBUG = -g -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -ftrapuv $(ISA_DEBUG)
+FFLAGS_OPT = -O3 -debug minimal -fp-model source
+FFLAGS_REPRO = -O2 -debug minimal -fp-model source
+FFLAGS_DEBUG = -g -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -ftrapv
 
 # Flags to add additional build options
 FFLAGS_OPENMP = -qopenmp
 FFLAGS_OVERRIDE_LIMITS = -qoverride-limits
-FFLAGS_VERBOSE = -v -V -what -warn all -qopt-report-phase=vec -qopt-report=2
+FFLAGS_VERBOSE = -v -V -what -warn all -qopt-report-phase=vec -qopt-report=2 
 FFLAGS_COVERAGE = -prof-gen=srcpos
 
 # Macro for C preprocessor
@@ -130,16 +111,17 @@ CPPFLAGS := -D__IFC $(INCLUDES)
 CPPFLAGS += $(shell nc-config --cflags)
 
 # Base set of C compiler flags
-CFLAGS := -sox -traceback
+CFLAGS := -traceback
 
+OTHER_CXXFLAGS := -I/home/Niki.Zadeh/.conda/envs/platforms/include/python3.12 -I/home/Niki.Zadeh/.conda/envs/platforms/lib/python3.12/site-packages/numpy/core/include
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
-CFLAGS_OPT = -O2 -debug minimal $(ISA_OPT)
-CFLAGS_REPRO = -O2 -debug minimal $(ISA_REPRO)
-CFLAGS_DEBUG = -O0 -g -ftrapuv $(ISA_DEBUG)
+CFLAGS_OPT = -O2 -debug minimal
+CFLAGS_REPRO = -O2 -debug minimal
+CFLAGS_DEBUG = -O0 -g -ftrapv
 
 # Flags to add additional build options
 CFLAGS_OPENMP = -qopenmp
-CFLAGS_VERBOSE = -w3 -qopt-report-phase=vec -qopt-report=2
+CFLAGS_VERBOSE = -w3
 CFLAGS_COVERAGE = -prof-gen=srcpos
 
 # Optional Testing compile flags.  Mutually exclusive from DEBUG, REPRO, and OPT
@@ -153,10 +135,9 @@ LDFLAGS_OPENMP := -qopenmp
 LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
 LDFLAGS_COVERAGE = -prof-gen=srcpos
 
-# List of -L library directories to be added to the compile and linking commands
-LIBS := $(shell pkg-config --libs yaml-0.1) $(shell nc-config --libs)
-LIBS += -L/usr/local/hdf5/intel-19.1/openmpi-4.1.0/1.10.6/lib64
-LIBS += -lnetcdf -lnetcdff -lhdf5_fortran -lhdf5_hl -lhdf5
+# Start with blank LIBS
+LIBS :=
+
 # Get compile flags based on target macros.
 ifdef REPRO
 CFLAGS += $(CFLAGS_REPRO)
@@ -176,6 +157,11 @@ ifdef OPENMP
 CFLAGS += $(CFLAGS_OPENMP)
 FFLAGS += $(FFLAGS_OPENMP)
 LDFLAGS += $(LDFLAGS_OPENMP)
+endif
+
+ifdef ISA
+CFLAGS += $(ISA)
+FFLAGS += $(ISA)
 endif
 
 ifdef NO_OVERRIDE_LIMITS
@@ -202,7 +188,11 @@ FFLAGS += $(FFLAGS_COVERAGE) $(PROF_DIR)
 LDFLAGS += $(LDFLAGS_COVERAGE) $(PROF_DIR)
 endif
 
+LIBS := $(shell nc-config --libs) $(shell pkg-config --libs mpich2-f90)
 LDFLAGS += $(LIBS)
+LDFLAGS += -lmpi -lmpifort
+LDFLAGS += -lnetcdf -lnetcdff
+LDFLAGS += -L/home/Niki.Zadeh/.conda/envs/platforms/lib -lpython3.12 -lstdc++
 
 #---------------------------------------------------------------------------
 # you should never need to change any lines below.
@@ -224,6 +214,7 @@ LDFLAGS += $(LIBS)
 # The macro TMPFILES is provided to slate files like the above for removal.
 
 RM = rm -f
+SHELL = /bin/csh -f
 TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
 
 .SUFFIXES: .F .F90 .H .L .T .f .f90 .h .i .i90 .l .o .s .opt .x
