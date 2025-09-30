@@ -68,6 +68,10 @@ if [[ $target =~ "avx512" ]] ; then
    makeflags="$makeflags PROD=1 AVX=512"
 fi
 
+if [[ $target =~ "avx2" ]] ; then
+   makeflags="$makeflags PROD=1 AVX=2"
+fi
+
 if [[ $target =~ "debug" ]] ; then
    makeflags="$makeflags DEBUG=1"
 fi

@@ -50,8 +50,9 @@ NETCDF =             # If value is '3' and CPPDEFS contains
 INCLUDES =           # A list of -I Include directories to be added to the
                      # the compile command.
 
+AVX =
+
 #ISA = -xsse2         # The Intel Instruction Set Archetecture (ISA) compile
-ISA = -march=core-avx-i -qno-opt-dynamic-align
                      # option to use.  If blank, than use the default SSE
                      # settings for the host.  Current default is to use SSE2.
 
@@ -92,7 +93,7 @@ FPPFLAGS := -fpp -Wp,-w $(INCLUDES)
 FPPFLAGS += $(shell nf-config --fflags)
 
 # Base set of Fortran compiler flags
-FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -traceback
+FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -traceback -qno-opt-dynamic-align
 
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
 FFLAGS_OPT = -O3 -debug minimal -fp-model source
@@ -157,6 +158,14 @@ ifdef OPENMP
 CFLAGS += $(CFLAGS_OPENMP)
 FFLAGS += $(FFLAGS_OPENMP)
 LDFLAGS += $(LDFLAGS_OPENMP)
+endif
+
+ifdef AVX
+CFLAGS += -march=core-avx$(AVX)
+FFLAGS += -march=core-avx$(AVX)
+else
+CFLAGS += -march=core-avx-i
+FFLAGS += -march=core-avx-i
 endif
 
 ifdef ISA
