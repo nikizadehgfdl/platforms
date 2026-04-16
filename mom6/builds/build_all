@@ -1,20 +1,15 @@
-./linux-build.bash -m gaea -p intel16 -t prod -f mom6sis2
-./linux-build.bash -m gaea -p intel16 -t prod-openmp -f mom6sis2
-./linux-build.bash -m gaea -p intel19 -t prod -f mom6sis2
-./linux-build.bash -m gaea -p intel19 -t prod-openmp -f mom6sis2
-./linux-build.bash -m gaea -p pgi18 -t prod -f mom6sis2
-./linux-build.bash -m gaea -p pgi18 -t prod-openmp -f mom6sis2
-./linux-build.bash -m gaea -p gnu7 -t prod -f mom6sis2
-./linux-build.bash -m gaea -p gnu7 -t prod-openmp -f mom6sis2
-./linux-build.bash -m gfdl-ws -p gnu11 -t debug -f mom6solo
-./linux-build.bash -m gfdl-ws -p intel22 -t repro -f mom6solo
 
-./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
-./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
-./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-stdpar -f mom6sis2
-./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltOMPGPU -f mom6sis2
-./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltACC -f mom6sis2
-source ../../../builds/lscgpu50/nvhpc23.1.env ; mpirun -n 1 ../../../builds/build/lscgpu50-nvhpc23.1/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscgpu50-nvhpc23.1.repro.n1t1.20230501
+(cd /scratch/cimes/nzadeh/platforms_CEFI/mom6/builds; ./linux-build.bash -m stellar -p intel22 -t repro -f mom6sis2)
+
+(cd  ~/platforms_CEFI/mom6/builds/;./linux-build.bash -m lscamd50 -p nvhpc_mysdk239 -t repro -f mom6sis2)
+cd ~/platforms_CEFI/mom6/MOM6SIS2_experiments/MOM6SIS2COBALT.global_twodegree
+source ../../builds/lscamd50/nvhpc_mysdk239.env ; mpirun -n 1 ../../builds/build/lscamd50-nvhpc_mysdk239/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-nvhpc_mysdk239.repro.n1.20250925
+
+(cd  ~/platforms_CEFI/mom6/builds/;./linux-build.bash -m lscamd50 -p intel25 -t repro -f mom6sis2)
+source ../../builds/lscamd50/intel25.env ; mpirun -n 1 ../../builds/build/lscamd50-intel25/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-intel25.repro.n1.20250212
+source ../../builds/lscamd50/intel25.env ; mpirun -n 64 ../../builds/build/lscamd50-intel25/ocean_ice/repro/MOM6SIS2 | & tee stdout.lscamd50-intel25.repro.n64.1day.cbed
+
+#Older, may not work because dependencies might not be available any more
 ./linux-build.bash -m lscamd50 -p intel22 -t repro -f mom6sis2
 source ../../../builds/lscamd50/intel22.env ; mpirun -n 1 ../../../builds/build/lscamd50-intel22/ocean_ice/repro/MOM6SIS2 |& tee stdout.lscamd50-intel22.repro.n1.20230919
 ./linux-build.bash -m lscamd50 -p intel24 -t repro -f mom6sis2
@@ -78,3 +73,21 @@ mpirun noticed that process rank 0 with PID 13996 on node nikizadeh-nzcacobaltgp
 #
 ./linux-build.bash -m awscloud  -p nvhpc239P3gpu -t repro -f mom6sis2
 source ../../builds/awscloud/nvhpc239P3gpu.env ; mpirun -n 1 ../../builds/build/awscloud-nvhpc239P3gpu/ocean_ice/repro/MOM6SIS2  |& tee stdout.awscloud.nvhpc239P3gpu.20240318.gpunode
+
+
+./linux-build.bash -m gaea -p intel16 -t prod -f mom6sis2
+./linux-build.bash -m gaea -p intel16 -t prod-openmp -f mom6sis2
+./linux-build.bash -m gaea -p intel19 -t prod -f mom6sis2
+./linux-build.bash -m gaea -p intel19 -t prod-openmp -f mom6sis2
+./linux-build.bash -m gaea -p pgi18 -t prod -f mom6sis2
+./linux-build.bash -m gaea -p pgi18 -t prod-openmp -f mom6sis2
+./linux-build.bash -m gaea -p gnu7 -t prod -f mom6sis2
+./linux-build.bash -m gaea -p gnu7 -t prod-openmp -f mom6sis2
+./linux-build.bash -m gfdl-ws -p gnu11 -t debug -f mom6solo
+./linux-build.bash -m gfdl-ws -p intel22 -t repro -f mom6solo
+
+./linux-build.bash -m lscgpu50 -p nvhpc22.5 -t prod -f mom6sis2
+./linux-build.bash -m lscgpu50 -p gnu11 -t prod -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-stdpar -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltOMPGPU -f mom6sis2
+./linux-build.bash -m lscgpu50 -p nvhpc23.1 -t repro-cobaltACC -f mom6sis2

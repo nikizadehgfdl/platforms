@@ -50,9 +50,8 @@ NETCDF =             # If value is '3' and CPPDEFS contains
 INCLUDES =           # A list of -I Include directories to be added to the
                      # the compile command.
 
-AVX =
-
 #ISA = -xsse2         # The Intel Instruction Set Archetecture (ISA) compile
+ISA = -march=core-avx-i -qno-opt-dynamic-align
                      # option to use.  If blank, than use the default SSE
                      # settings for the host.  Current default is to use SSE2.
 
@@ -93,7 +92,7 @@ FPPFLAGS := -fpp -Wp,-w $(INCLUDES)
 FPPFLAGS += $(shell nf-config --fflags)
 
 # Base set of Fortran compiler flags
-FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -traceback -qno-opt-dynamic-align
+FFLAGS := -fno-alias -auto -safe-cray-ptr -ftz -assume byterecl -i4 -r8 -nowarn -traceback
 
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
 FFLAGS_OPT = -O3 -debug minimal -fp-model source
@@ -101,9 +100,9 @@ FFLAGS_REPRO = -O2 -debug minimal -fp-model source
 FFLAGS_DEBUG = -g -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -fpe0 -ftrapv
 
 # Flags to add additional build options
-FFLAGS_OPENMP = -qopenmp 
+FFLAGS_OPENMP = -qopenmp
 FFLAGS_OVERRIDE_LIMITS = -qoverride-limits
-FFLAGS_VERBOSE = -v -V -what -warn all -qopt-report-phase=vec -qopt-report=5 
+FFLAGS_VERBOSE = -v -V -what -warn all -qopt-report-phase=vec -qopt-report=2 
 FFLAGS_COVERAGE = -prof-gen=srcpos
 
 # Macro for C preprocessor
@@ -114,7 +113,7 @@ CPPFLAGS += $(shell nc-config --cflags)
 # Base set of C compiler flags
 CFLAGS := -traceback
 
-OTHER_CXXFLAGS := -I/home/Niki.Zadeh/.conda/envs/plattorch_ext/include/python3.9 -I/home/Niki.Zadeh/.conda/envs/plattorch_ext/lib/python3.9/site-packages/numpy/core/include
+OTHER_CXXFLAGS := -I/home/Niki.Zadeh/.conda/envs/platforms/include/python3.12 -I/home/Niki.Zadeh/.conda/envs/platforms/lib/python3.12/site-packages/numpy/core/include
 # Flags based on perforance target (production (OPT), reproduction (REPRO), or debug (DEBUG)
 CFLAGS_OPT = -O2 -debug minimal
 CFLAGS_REPRO = -O2 -debug minimal
@@ -160,14 +159,6 @@ FFLAGS += $(FFLAGS_OPENMP)
 LDFLAGS += $(LDFLAGS_OPENMP)
 endif
 
-ifdef AVX
-CFLAGS += -march=core-avx$(AVX)
-FFLAGS += -march=core-avx$(AVX)
-else
-CFLAGS += -march=core-avx-i
-FFLAGS += -march=core-avx-i
-endif
-
 ifdef ISA
 CFLAGS += $(ISA)
 FFLAGS += $(ISA)
@@ -201,7 +192,7 @@ LIBS := $(shell nc-config --libs) $(shell pkg-config --libs mpich2-f90)
 LDFLAGS += $(LIBS)
 LDFLAGS += -lmpi -lmpifort
 LDFLAGS += -lnetcdf -lnetcdff
-LDFLAGS += -L/home/Niki.Zadeh/.conda/envs/plattorch/lib -lpython3.9 -lstdc++
+LDFLAGS += -L/home/Niki.Zadeh/.conda/envs/platforms/lib -lpython3.12 -lstdc++
 
 #---------------------------------------------------------------------------
 # you should never need to change any lines below.
